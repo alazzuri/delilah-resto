@@ -231,9 +231,9 @@ paths:
           schema:
             type: "object"
             properties:
-              Username:
+              username:
                 type: "string"
-              Password:
+              password:
                 type: "string"
       responses:
         200:

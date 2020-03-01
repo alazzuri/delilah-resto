@@ -2,6 +2,12 @@ const express = require("express");
 const server = express();
 const bodyParser = require("body-parser");
 const CORS = require("cors");
+const JWT = require("jsonwebtoken");
+
+///ESTO SE REEEMPLAZA POR BASE DE DATOS
+const signature = "vamosRiverPlate";
+
+/////
 
 server.listen(3000, () => console.log("Server Started"));
 
@@ -14,14 +20,35 @@ server.post("/v1/users/", registerUser, (req, res) => {
     : res.status(400).json("Missing Arguments");
 });
 
+server.post("/v1/users/login", validateCredentials, (req, res) => {
+  const { jwtToken } = req;
+  jwtToken !== null
+    ? res.status(200).json(jwtToken)
+    : res.status(400).json("Invalid username or password supplied");
+});
+
 function registerUser(req, res, next) {
   const { userName, name, password, email, address, phone } = req.body;
   if (userName && name && password && email && address && phone) {
     req.isCreated = true;
-    next();
   } else {
     req.isCreated = false;
-    next();
   }
+  next();
   //logica de la base de datos
+}
+
+function validateCredentials(req, res, next) {
+  const { username, password } = req.body;
+  // traer username y contraseña de la DB. Traer tambien si es admin
+  const dbUsername = "Ale";
+  const dbPassword = "123";
+  const isAdmin = true;
+  if (username === dbUsername && password === dbPassword) {
+    const token = JWT.sign({ username, isAdmin }, signature); // traer signature
+    req.jwtToken = token;
+  } else {
+    req.jwtToken = null;
+  }
+  next();
 }
