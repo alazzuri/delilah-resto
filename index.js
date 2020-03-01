@@ -42,6 +42,14 @@ server.post("/v1/products/", validateAuth, createProduct, (req, res) => {
     : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
 });
 
+server.put("/v1/products/", validateAuth, updateProduct, (req, res) => {
+  //traer listado de productos de la DB)
+  const { isUpdated } = req;
+  isUpdated
+    ? res.status(202).json("Product Udpated") //Actualizar msj en la DOC de la API. Ver todos los status code
+    : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
+});
+
 // UTILS
 function registerUser(req, res, next) {
   const { userName, name, password, email, address, phone } = req.body;
@@ -87,6 +95,30 @@ function createProduct(req, res, next) {
     req.isCreated = true;
   } else {
     req.isCreated = false;
+  }
+  //logica de mandar a la base de datos
+  next();
+}
+
+function findProduct(productDb, id) {
+  const foundProduct = productDb.find(product => +product.id === +id);
+  return foundProduct;
+}
+
+function updateProduct(req, res, next) {
+  const { id, name, photoUrls, price, status } = req.body;
+  //traer producto de la base de datos por su id y reemplazar por este. Ver si no hace falta pedir el ID aca.
+  const PRODUCTS = [{ id: 1 }];
+  const productToUpdate = findProduct(PRODUCTS, id);
+
+  if (productToUpdate) {
+    if (name && photoUrls && price >= 0 && status) {
+      req.isUpdated = true;
+    } else {
+      req.isUpdated = false;
+    }
+  } else {
+    res.status(404).json("Product not found");
   }
   //logica de mandar a la base de datos
   next();
