@@ -145,3 +145,10 @@ function deleteProduct(req, res, next) {
   //logica de mandar a la base de datos
   next();
 }
+
+// ERROR DETECTION
+server.use((err, req, res, next) => {
+  if (!err) return next();
+  console.log("An error has occurred", err);
+  res.status(500).send("Error");
+});
