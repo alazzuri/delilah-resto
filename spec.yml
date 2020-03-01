@@ -65,6 +65,8 @@ paths:
       responses:
         201:
           description: "Created"
+        403:
+          description: "Forbidden"
         405:
           description: "Invalid input"
       security:

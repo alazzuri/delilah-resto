@@ -34,6 +34,14 @@ server.get("/v1/products/", (req, res) => {
   res.status(200).json({ productsDB: "Database" }); // remplazar por el listado de la DB.
 });
 
+server.post("/v1/products/", validateAuth, createProduct, (req, res) => {
+  //traer listado de productos de la DB)
+  const { isCreated } = req;
+  isCreated
+    ? res.status(201).json("User Created")
+    : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
+});
+
 // UTILS
 function registerUser(req, res, next) {
   const { userName, name, password, email, address, phone } = req.body;
@@ -58,5 +66,28 @@ function validateCredentials(req, res, next) {
   } else {
     req.jwtToken = null;
   }
+  next();
+}
+
+function validateAuth(req, res, next) {
+  const token = req.headers.authorization;
+  const validatedUser = JWT.verify(token, signature);
+  const { isAdmin } = validatedUser;
+  if (isAdmin) {
+    req.isAdmin = isAdmin;
+    next();
+  } else {
+    res.status(403).json("Forbidden");
+  }
+}
+
+function createProduct(req, res, next) {
+  const { name, photoUrls, price, status } = req.body;
+  if (name && photoUrls && price >= 0 && status) {
+    req.isCreated = true;
+  } else {
+    req.isCreated = false;
+  }
+  //logica de mandar a la base de datos
   next();
 }
