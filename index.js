@@ -50,6 +50,12 @@ server.put("/v1/products/", validateAuth, updateProduct, (req, res) => {
     : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
 });
 
+server.delete("/v1/products/", validateAuth, deleteProduct, (req, res) => {
+  //traer listado de productos de la DB)
+  const { isDeleted } = req;
+  isDeleted && res.status(200).json("Deleted"); //Actualizar msj en la DOC de la API. Ver todos los status code
+});
+
 // UTILS
 function registerUser(req, res, next) {
   const { userName, name, password, email, address, phone } = req.body;
@@ -117,6 +123,22 @@ function updateProduct(req, res, next) {
     } else {
       req.isUpdated = false;
     }
+  } else {
+    res.status(404).json("Product not found");
+  }
+  //logica de mandar a la base de datos
+  next();
+}
+
+function deleteProduct(req, res, next) {
+  const { id } = req.body;
+  //traer producto de la base de datos por su id y reemplazar por este. Ver si no hace falta pedir el ID aca.
+  const PRODUCTS = [{ id: 1 }];
+  const productToDelete = findProduct(PRODUCTS, id);
+
+  if (productToDelete) {
+    // borrar producto
+    req.isDeleted = true;
   } else {
     res.status(404).json("Product not found");
   }
