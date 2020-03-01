@@ -65,6 +65,14 @@ server.post("/v1/orders/", createOrder, (req, res) => {
     : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
 });
 
+server.put("/v1/orders/", validateAuth, updateOrderStatus, (req, res) => {
+  //traer listado de productos de la DB)
+  const { isUpdated } = req;
+  isUpdated
+    ? res.status(202).json("Order Udpated") //Actualizar msj en la DOC de la API. Ver todos los status code
+    : res.status(405).json("Invalid status suplied"); // ver el status code y cambiar en la DOC de la API
+});
+
 // UTILS
 function registerUser(req, res, next) {
   const { userName, name, password, email, address, phone } = req.body;
@@ -162,6 +170,30 @@ function createOrder(req, res, next) {
     req.isCreated = true;
   } else {
     req.isCreated = false;
+  }
+  next();
+}
+
+function findOrder(orderDb, id) {
+  const foundOrder = orderDb.find(order => +order.id === +id);
+  return foundOrder;
+}
+
+function updateOrderStatus(req, res, next) {
+  const { orderId, status } = req.body; // unificar nombres de constantes
+  //traer producto de la base de datos por su id y reemplazar por este. Ver si no hace falta pedir el ID aca.
+  const ORDERS = [{ id: 1 }];
+  const orderToUpdate = findOrder(ORDERS, orderId);
+
+  if (orderToUpdate) {
+    if (status) {
+      req.isUpdated = true;
+      //logica de mandar a la base de datos
+    } else {
+      req.isUpdated = false;
+    }
+  } else {
+    res.status(404).json("Product not found");
   }
   next();
 }
