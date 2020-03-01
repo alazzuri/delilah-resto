@@ -56,6 +56,15 @@ server.delete("/v1/products/", validateAuth, deleteProduct, (req, res) => {
   isDeleted && res.status(200).json("Deleted"); //Actualizar msj en la DOC de la API. Ver todos los status code
 });
 
+// ORDERS ENDPOINTS
+
+server.post("/v1/orders/", createOrder, (req, res) => {
+  const { isCreated } = req;
+  isCreated
+    ? res.status(201).json("Order Created")
+    : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
+});
+
 // UTILS
 function registerUser(req, res, next) {
   const { userName, name, password, email, address, phone } = req.body;
@@ -143,6 +152,17 @@ function deleteProduct(req, res, next) {
     res.status(404).json("Product not found");
   }
   //logica de mandar a la base de datos
+  next();
+}
+
+function createOrder(req, res, next) {
+  const { user, products } = req.body;
+  if (user && products) {
+    //logica de mandar a la base de datos
+    req.isCreated = true;
+  } else {
+    req.isCreated = false;
+  }
   next();
 }
 
