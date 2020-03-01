@@ -296,7 +296,7 @@ definitions:
   User:
     type: "object"
     properties:
-      username:
+      userName:
         type: "string"
       name:
         type: "string"
