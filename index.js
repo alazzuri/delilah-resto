@@ -13,6 +13,7 @@ server.listen(3000, () => console.log("Server Started"));
 
 server.use(bodyParser.json(), CORS());
 
+// USERS ENDPOINTS
 server.post("/v1/users/", registerUser, (req, res) => {
   const { isCreated } = req;
   isCreated
@@ -23,10 +24,17 @@ server.post("/v1/users/", registerUser, (req, res) => {
 server.post("/v1/users/login", validateCredentials, (req, res) => {
   const { jwtToken } = req;
   jwtToken !== null
-    ? res.status(200).json(jwtToken)
+    ? res.status(200).json(jwtToken) // ver de mandar en el HEADER la validez del TOken
     : res.status(400).json("Invalid username or password supplied");
 });
 
+// PRODUCTS ENDOPINTS
+server.get("/v1/products/", (req, res) => {
+  //traer listado de productos de la DB)
+  res.status(200).json({ productsDB: "Database" }); // remplazar por el listado de la DB.
+});
+
+// UTILS
 function registerUser(req, res, next) {
   const { userName, name, password, email, address, phone } = req.body;
   if (userName && name && password && email && address && phone) {
