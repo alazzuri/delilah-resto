@@ -58,6 +58,10 @@ server.delete("/v1/products/", validateAuth, deleteProduct, (req, res) => {
 
 // ORDERS ENDPOINTS
 
+server.get("/v1/orders/", validateAuth, (req, res) => {
+  res.status(200).json({ productsDB: "Database" }); // remplazar por el listado de la DB.
+});
+
 server.post("/v1/orders/", createOrder, (req, res) => {
   const { isCreated } = req;
   isCreated
