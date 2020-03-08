@@ -2,13 +2,20 @@ const express = require("express");
 const server = express();
 const bodyParser = require("body-parser");
 const CORS = require("cors");
-const JWT = require("jsonwebtoken");
+const { JWT, signature } = require("./auth");
+const { sequelize, dbAuthentication, insertQuery } = require("./db");
 
-///ESTO SE REEEMPLAZA POR BASE DE DATOS
-const signature = "vamosRiverPlate";
+//CONEXION BASE DE DATOS
 
-/////
+const dataBase = async () => await dbAuthentication;
 
+dataBase().then(async () => {
+  const query = "SELECT * FROM delilah_resto.users";
+  const [resultados] = await sequelize.query(query, { raw: true });
+  console.log(resultados);
+});
+
+//SET UP SERVER
 server.listen(3000, () => console.log("Server Started"));
 
 server.use(bodyParser.json(), CORS());
@@ -79,14 +86,50 @@ server.put("/v1/orders/", validateAuth, updateOrderStatus, (req, res) => {
 
 // UTILS
 function registerUser(req, res, next) {
-  const { userName, name, password, email, address, phone } = req.body;
-  if (userName && name && password && email && address && phone) {
-    req.isCreated = true;
+  const {
+    username,
+    password,
+    firstname,
+    lastname,
+    address,
+    email,
+    phone_number
+  } = req.body;
+  if (
+    username &&
+    password &&
+    firstname &&
+    lastname &&
+    address &&
+    email &&
+    phone_number
+  ) {
+    dataBase()
+      .then(async () => {
+        const query = insertQuery(
+          "users",
+          "username, password, firstname, lastname, address, email, phone_number",
+          [
+            username,
+            password,
+            firstname,
+            lastname,
+            address,
+            email,
+            phone_number
+          ]
+        );
+        await sequelize.query(query, { raw: true });
+        return true;
+      })
+      .then(response => {
+        req.isCreated = response;
+        next();
+      });
   } else {
     req.isCreated = false;
+    next();
   }
-  next();
-  //logica de la base de datos
 }
 
 function validateCredentials(req, res, next) {
