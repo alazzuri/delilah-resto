@@ -17,7 +17,7 @@ const dataBase = async () => await dbAuthentication;
 dataBase().then(async () => {
   const query = "SELECT * FROM delilah_resto.users";
   const [resultados] = await sequelize.query(query, { raw: true });
-  console.log(resultados);
+  // console.log(resultados);
 });
 
 //SET UP SERVER
@@ -41,9 +41,9 @@ server.post("/v1/users/login", validateCredentials, (req, res) => {
 });
 
 // PRODUCTS ENDOPINTS
-server.get("/v1/products/", (req, res) => {
-  //traer listado de productos de la DB)
-  res.status(200).json({ productsDB: "Database" }); // remplazar por el listado de la DB.
+server.get("/v1/products/", async (req, res) => {
+  productsDb = await getProducts();
+  res.status(200).json(productsDb);
 });
 
 server.post("/v1/products/", validateAuth, createProduct, (req, res) => {
@@ -214,6 +214,16 @@ function validateAuth(req, res, next) {
   } else {
     res.status(403).json("Forbidden");
   }
+}
+
+async function getProducts(req, res, next) {
+  const productsList = await dataBase().then(async () => {
+    const query = selectQuery("products");
+    const [dbProducts] = await sequelize.query(query, { raw: true });
+    return dbProducts;
+  });
+
+  return productsList;
 }
 
 function createProduct(req, res, next) {
