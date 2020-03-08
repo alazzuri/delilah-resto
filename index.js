@@ -47,10 +47,10 @@ server.get("/v1/products/", async (req, res) => {
 });
 
 server.post("/v1/products/", validateAuth, createProduct, (req, res) => {
-  //traer listado de productos de la DB)
-  const { isCreated } = req;
-  isCreated
-    ? res.status(201).json("User Created")
+  const { addedProduct } = req;
+
+  addedProduct
+    ? res.status(201).json("Product Created")
     : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
 });
 
@@ -226,15 +226,27 @@ async function getProducts(req, res, next) {
   return productsList;
 }
 
-function createProduct(req, res, next) {
+async function createProduct(req, res, next) {
   const { name, photoUrls, price, status } = req.body;
-  if (name && photoUrls && price >= 0 && status) {
-    req.isCreated = true;
+  if (name && photoUrls && price >= 0) {
+    const createdProduct = await newProduct(name, photoUrls, price);
+    req.addedProduct = createdProduct;
   } else {
-    req.isCreated = false;
+    req.addedProduct = null;
   }
-  //logica de mandar a la base de datos
   next();
+}
+
+async function newProduct(product_name, product_photo, product_price) {
+  return dataBase().then(async () => {
+    const query = insertQuery(
+      "products",
+      "product_name, product_photo, product_price",
+      [product_name, product_photo, product_price]
+    );
+    const [addedProduct] = await sequelize.query(query, { raw: true });
+    return addedProduct;
+  });
 }
 
 function findProduct(productDb, id) {
