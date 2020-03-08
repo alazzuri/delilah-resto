@@ -91,7 +91,7 @@ server.put("/v1/orders/", validateAuth, updateOrderStatus, (req, res) => {
 
 // UTILS
 
-async function findUser(req) {
+async function findUserByName(req) {
   const { firstname, lastname } = req.body;
 
   const userExists = await dataBase().then(async () => {
@@ -113,7 +113,7 @@ async function findUser(req) {
 }
 
 async function validateExistingUser(req, res, next) {
-  const existingUser = await findUser(req);
+  const existingUser = await findUserByName(req);
   !existingUser ? next() : res.status(409).json("User already exists");
 }
 
