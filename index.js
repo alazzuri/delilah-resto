@@ -125,7 +125,8 @@ function registerUser(req, res, next) {
     lastname,
     address,
     email,
-    phone_number
+    phone_number,
+    isAdmin
   } = req.body;
   if (
     username &&
@@ -140,7 +141,7 @@ function registerUser(req, res, next) {
       .then(async () => {
         const query = insertQuery(
           "users",
-          "username, password, firstname, lastname, address, email, phone_number",
+          "username, password, firstname, lastname, address, email, phone_number, isAdmin",
           [
             username,
             password,
@@ -148,7 +149,8 @@ function registerUser(req, res, next) {
             lastname,
             address,
             email,
-            phone_number
+            phone_number,
+            isAdmin
           ]
         );
         await sequelize.query(query, { raw: true });
@@ -164,15 +166,39 @@ function registerUser(req, res, next) {
   }
 }
 
-function validateCredentials(req, res, next) {
+async function findUserbyUsername(req) {
+  const { username } = req.body;
+  const existingUser = await dataBase().then(async () => {
+    const query = selectQuery(
+      "users",
+      "username, password, isAdmin",
+      `username = '${username}'`
+    );
+
+    const [dbUser] = await sequelize.query(query, { raw: true });
+    const foundUser = await dbUser.find(
+      element => element.username === username
+    );
+    return foundUser;
+  });
+
+  return existingUser;
+}
+
+async function validateCredentials(req, res, next) {
   const { username, password } = req.body;
-  // traer username y contraseña de la DB. Traer tambien si es admin
-  const dbUsername = "Ale";
-  const dbPassword = "123";
-  const isAdmin = true;
-  if (username === dbUsername && password === dbPassword) {
-    const token = JWT.sign({ username, isAdmin }, signature); // traer signature
-    req.jwtToken = token;
+  const registeredUser = await findUserbyUsername(req);
+  if (registeredUser) {
+    const dbUsername = registeredUser.username;
+    const dbPassword = registeredUser.password;
+    const isAdmin = registeredUser.isAdmin;
+
+    if (username === dbUsername && password === dbPassword) {
+      const token = JWT.sign({ username, isAdmin }, signature);
+      req.jwtToken = token;
+    } else {
+      req.jwtToken = null;
+    }
   } else {
     req.jwtToken = null;
   }
