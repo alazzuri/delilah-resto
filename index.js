@@ -26,7 +26,7 @@ server.listen(3000, () => console.log("Server Started"));
 server.use(bodyParser.json(), CORS());
 
 // USERS ENDPOINTS
-server.post("/v1/users/", registerUser, (req, res) => {
+server.post("/v1/users/", validateExistingUser, registerUser, (req, res) => {
   const { isCreated } = req;
   isCreated
     ? res.status(201).json("User Created")
@@ -90,6 +90,33 @@ server.put("/v1/orders/", validateAuth, updateOrderStatus, (req, res) => {
 });
 
 // UTILS
+
+async function findUser(req) {
+  const { firstname, lastname } = req.body;
+
+  const userExists = await dataBase().then(async () => {
+    const query = selectQuery(
+      "users",
+      "firstname, lastname",
+      `firstname = '${firstname}' AND lastname = '${lastname}'`
+    );
+
+    const [dbUser] = await sequelize.query(query, { raw: true });
+    const existingUser = await dbUser.find(
+      element =>
+        element.firstname === firstname && element.lastname === lastname
+    );
+
+    return existingUser ? true : false;
+  });
+  return userExists;
+}
+
+async function validateExistingUser(req, res, next) {
+  const existingUser = await findUser(req);
+  !existingUser ? next() : res.status(409).json("User already exists");
+}
+
 function registerUser(req, res, next) {
   const {
     username,
