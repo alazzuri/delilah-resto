@@ -12,4 +12,13 @@ function insertQuery(table, properties, values) {
   return query;
 }
 
-module.exports = { sequelize, dbAuthentication, insertQuery };
+//SELECT QUERY
+function selectQuery(table, columns = "*", conditions = null) {
+  const query =
+    `SELECT ${columns} FROM ${table}` +
+    ` ${conditions ? `WHERE ${conditions}` : ""}`;
+
+  return query;
+}
+
+module.exports = { sequelize, dbAuthentication, insertQuery, selectQuery };

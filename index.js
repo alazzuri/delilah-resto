@@ -3,7 +3,12 @@ const server = express();
 const bodyParser = require("body-parser");
 const CORS = require("cors");
 const { JWT, signature } = require("./auth");
-const { sequelize, dbAuthentication, insertQuery } = require("./db");
+const {
+  sequelize,
+  dbAuthentication,
+  insertQuery,
+  selectQuery
+} = require("./db");
 
 //CONEXION BASE DE DATOS
 
