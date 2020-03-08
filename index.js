@@ -166,8 +166,7 @@ function registerUser(req, res, next) {
   }
 }
 
-async function findUserbyUsername(req) {
-  const { username } = req.body;
+async function findUserbyUsername(username) {
   const existingUser = await dataBase().then(async () => {
     const query = selectQuery(
       "users",
@@ -187,7 +186,7 @@ async function findUserbyUsername(req) {
 
 async function validateCredentials(req, res, next) {
   const { username, password } = req.body;
-  const registeredUser = await findUserbyUsername(req);
+  const registeredUser = await findUserbyUsername(username);
   if (registeredUser) {
     const dbUsername = registeredUser.username;
     const dbPassword = registeredUser.password;
