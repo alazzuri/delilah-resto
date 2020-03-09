@@ -21,4 +21,20 @@ function selectQuery(table, columns = "*", conditions = null) {
   return query;
 }
 
-module.exports = { sequelize, dbAuthentication, insertQuery, selectQuery };
+//UPDATE QUERY
+
+function updateQuery(table, changes, conditions) {
+  const query =
+    `UPDATE ${table} SET ${changes}` +
+    ` ${conditions ? `WHERE ${conditions}` : ""}`;
+
+  return query;
+}
+
+module.exports = {
+  sequelize,
+  dbAuthentication,
+  insertQuery,
+  selectQuery,
+  updateQuery
+};
