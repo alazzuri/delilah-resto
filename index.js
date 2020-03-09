@@ -55,12 +55,17 @@ server.post("/v1/products/", validateAuth, createProduct, (req, res) => {
     : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
 });
 
-server.put("/v1/products/", validateAuth, updateProduct, (req, res) => {
+server.put(
+  "/v1/products/:productId",
+  validateAuth,
+  updateProduct,
+  (req, res) => {
   const { updatedProduct } = req;
   updatedProduct
     ? res.status(202).json(updatedProduct) //Actualizar msj en la DOC de la API. Ver todos los status code// ver si se devuelve el producto o msje de exito
     : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
-});
+  }
+);
 
 server.delete("/v1/products/", validateAuth, deleteProduct, (req, res) => {
   //traer listado de productos de la DB)
@@ -287,8 +292,8 @@ async function updateProductInDb(id, product) {
 }
 
 async function updateProduct(req, res, next) {
-  const { productDetails } = req.body;
-  const [id, updatedProperties] = productDetails; //debe venir un array con el id y un objeto con las nuevas propiedades
+  const id = +req.params.productId;
+  const updatedProperties = req.body;
   const productToUpdate = await findProductById(id);
   if (productToUpdate) {
     const updatedProduct = await applyProductChanges(
