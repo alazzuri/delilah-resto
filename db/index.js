@@ -26,8 +26,13 @@ function selectQuery(table, columns = "*", conditions = null) {
 function updateQuery(table, changes, conditions) {
   const query =
     `UPDATE ${table} SET ${changes}` +
-    ` ${conditions ? `WHERE ${conditions}` : ""}`;
+    ` ${conditions ? `WHERE ${conditions}` : ""}`; // PENSAR SI CONVIENE DEJAR ESTA VALIDACION O QUE SI O SI HAYA PARAMETRO
 
+  return query;
+}
+
+function deleteQuery(table, conditions) {
+  const query = `DELETE FROM ${table} WHERE ${conditions}`;
   return query;
 }
 
@@ -36,5 +41,6 @@ module.exports = {
   dbAuthentication,
   insertQuery,
   selectQuery,
-  updateQuery
+  updateQuery,
+  deleteQuery
 };
