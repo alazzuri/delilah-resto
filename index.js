@@ -8,7 +8,8 @@ const {
   dbAuthentication,
   insertQuery,
   selectQuery,
-  updateQuery
+  updateQuery,
+  deleteQuery
 } = require("./db");
 
 //CONEXION BASE DE DATOS
@@ -60,18 +61,22 @@ server.put(
   validateAuth,
   updateProduct,
   (req, res) => {
-  const { updatedProduct } = req;
-  updatedProduct
-    ? res.status(202).json(updatedProduct) //Actualizar msj en la DOC de la API. Ver todos los status code// ver si se devuelve el producto o msje de exito
-    : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
+    const { updatedProduct } = req;
+    updatedProduct
+      ? res.status(202).json(updatedProduct) //Actualizar msj en la DOC de la API. Ver todos los status code// ver si se devuelve el producto o msje de exito
+      : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
   }
 );
 
-server.delete("/v1/products/", validateAuth, deleteProduct, (req, res) => {
-  //traer listado de productos de la DB)
-  const { isDeleted } = req;
-  isDeleted && res.status(200).json("Deleted"); //Actualizar msj en la DOC de la API. Ver todos los status code
-});
+server.delete(
+  "/v1/products/:productId",
+  validateAuth,
+  deleteProduct,
+  (req, res) => {
+    const { isDeleted } = req;
+    isDeleted && res.status(200).json("Deleted"); //Actualizar msj en la DOC de la API. Ver todos los status code
+  }
+);
 
 // ORDERS ENDPOINTS
 
@@ -308,19 +313,20 @@ async function updateProduct(req, res, next) {
   next();
 }
 
-function deleteProduct(req, res, next) {
-  const { id } = req.body;
-  //traer producto de la base de datos por su id y reemplazar por este. Ver si no hace falta pedir el ID aca.
-  const PRODUCTS = [{ id: 1 }];
-  const productToDelete = findProductById(PRODUCTS, id);
-
+async function deleteProduct(req, res, next) {
+  const id = +req.params.productId;
+  const productToDelete = await findProductById(id);
   if (productToDelete) {
-    // borrar producto
-    req.isDeleted = true;
+    const isDeleted = await dataBase().then(async () => {
+      const query = deleteQuery("products", `idproducts = ${id}`);
+      await sequelize.query(query, { raw: true });
+      return true;
+    });
+
+    req.isDeleted = await isDeleted;
   } else {
     res.status(404).json("Product not found");
   }
-  //logica de mandar a la base de datos
   next();
 }
 
