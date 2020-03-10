@@ -21,4 +21,26 @@ function selectQuery(table, columns = "*", conditions = null) {
   return query;
 }
 
-module.exports = { sequelize, dbAuthentication, insertQuery, selectQuery };
+//UPDATE QUERY
+
+function updateQuery(table, changes, conditions) {
+  const query =
+    `UPDATE ${table} SET ${changes}` +
+    ` ${conditions ? `WHERE ${conditions}` : ""}`; // PENSAR SI CONVIENE DEJAR ESTA VALIDACION O QUE SI O SI HAYA PARAMETRO
+
+  return query;
+}
+
+function deleteQuery(table, conditions) {
+  const query = `DELETE FROM ${table} WHERE ${conditions}`;
+  return query;
+}
+
+module.exports = {
+  sequelize,
+  dbAuthentication,
+  insertQuery,
+  selectQuery,
+  updateQuery,
+  deleteQuery
+};

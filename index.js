@@ -7,7 +7,9 @@ const {
   sequelize,
   dbAuthentication,
   insertQuery,
-  selectQuery
+  selectQuery,
+  updateQuery,
+  deleteQuery
 } = require("./db");
 
 //CONEXION BASE DE DATOS
@@ -17,7 +19,7 @@ const dataBase = async () => await dbAuthentication;
 dataBase().then(async () => {
   const query = "SELECT * FROM delilah_resto.users";
   const [resultados] = await sequelize.query(query, { raw: true });
-  console.log(resultados);
+  // console.log(resultados);
 });
 
 //SET UP SERVER
@@ -41,32 +43,40 @@ server.post("/v1/users/login", validateCredentials, (req, res) => {
 });
 
 // PRODUCTS ENDOPINTS
-server.get("/v1/products/", (req, res) => {
-  //traer listado de productos de la DB)
-  res.status(200).json({ productsDB: "Database" }); // remplazar por el listado de la DB.
+server.get("/v1/products/", async (req, res) => {
+  productsDb = await getProducts();
+  res.status(200).json(productsDb);
 });
 
 server.post("/v1/products/", validateAuth, createProduct, (req, res) => {
-  //traer listado de productos de la DB)
-  const { isCreated } = req;
-  isCreated
-    ? res.status(201).json("User Created")
+  const { addedProduct } = req;
+
+  addedProduct
+    ? res.status(201).json("Product Created")
     : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
 });
 
-server.put("/v1/products/", validateAuth, updateProduct, (req, res) => {
-  //traer listado de productos de la DB)
-  const { isUpdated } = req;
-  isUpdated
-    ? res.status(202).json("Product Udpated") //Actualizar msj en la DOC de la API. Ver todos los status code
-    : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
-});
+server.put(
+  "/v1/products/:productId",
+  validateAuth,
+  updateProduct,
+  (req, res) => {
+    const { updatedProduct } = req;
+    updatedProduct
+      ? res.status(202).json(updatedProduct) //Actualizar msj en la DOC de la API. Ver todos los status code// ver si se devuelve el producto o msje de exito
+      : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
+  }
+);
 
-server.delete("/v1/products/", validateAuth, deleteProduct, (req, res) => {
-  //traer listado de productos de la DB)
-  const { isDeleted } = req;
-  isDeleted && res.status(200).json("Deleted"); //Actualizar msj en la DOC de la API. Ver todos los status code
-});
+server.delete(
+  "/v1/products/:productId",
+  validateAuth,
+  deleteProduct,
+  (req, res) => {
+    const { isDeleted } = req;
+    isDeleted && res.status(200).json("Deleted"); //Actualizar msj en la DOC de la API. Ver todos los status code
+  }
+);
 
 // ORDERS ENDPOINTS
 
@@ -216,54 +226,107 @@ function validateAuth(req, res, next) {
   }
 }
 
-function createProduct(req, res, next) {
+async function getProducts(req, res, next) {
+  const productsList = await dataBase().then(async () => {
+    const query = selectQuery("products");
+    const [dbProducts] = await sequelize.query(query, { raw: true });
+    return dbProducts;
+  });
+
+  return productsList;
+}
+
+async function createProduct(req, res, next) {
   const { name, photoUrls, price, status } = req.body;
-  if (name && photoUrls && price >= 0 && status) {
-    req.isCreated = true;
+  if (name && photoUrls && price >= 0) {
+    const createdProduct = await newProduct(name, photoUrls, price);
+    req.addedProduct = createdProduct;
   } else {
-    req.isCreated = false;
+    req.addedProduct = null;
   }
-  //logica de mandar a la base de datos
   next();
 }
 
-function findProduct(productDb, id) {
-  const foundProduct = productDb.find(product => +product.id === +id);
-  return foundProduct;
+async function newProduct(product_name, product_photo, product_price) {
+  return dataBase().then(async () => {
+    const query = insertQuery(
+      "products",
+      "product_name, product_photo, product_price",
+      [product_name, product_photo, product_price]
+    );
+    const [addedProduct] = await sequelize.query(query, { raw: true });
+    return addedProduct;
+  });
 }
 
-function updateProduct(req, res, next) {
-  const { id, name, photoUrls, price, status } = req.body;
-  //traer producto de la base de datos por su id y reemplazar por este. Ver si no hace falta pedir el ID aca.
-  const PRODUCTS = [{ id: 1 }];
-  const productToUpdate = findProduct(PRODUCTS, id);
+async function findProductById(id) {
+  const existingProduct = await dataBase().then(async () => {
+    const query = selectQuery("products", "*", `idproducts = ${id}`);
 
+    const [dbProduct] = await sequelize.query(query, { raw: true });
+
+    const foundProduct = await dbProduct.find(
+      element => element.idproducts === id
+    );
+    return foundProduct;
+  });
+
+  return existingProduct;
+}
+
+async function applyProductChanges(productToUpdate, updatedProperties) {
+  const currentProduct = productToUpdate;
+  const newProperties = updatedProperties;
+  const updatedProduct = Object.assign(currentProduct, newProperties);
+  return updatedProduct;
+}
+
+async function updateProductInDb(id, product) {
+  const { product_name, product_photo, product_price } = product;
+  updatedProduct = await dataBase().then(async () => {
+    const query = updateQuery(
+      "products",
+      `product_name = '${product_name}', product_photo = '${product_photo}', product_price = '${product_price}'`,
+      `idProducts = ${id}`
+    );
+    await sequelize.query(query, { raw: true });
+    const dbProduct = await findProductById(id);
+    return dbProduct;
+  });
+  return updatedProduct;
+}
+
+async function updateProduct(req, res, next) {
+  const id = +req.params.productId;
+  const updatedProperties = req.body;
+  const productToUpdate = await findProductById(id);
   if (productToUpdate) {
-    if (name && photoUrls && price >= 0 && status) {
-      req.isUpdated = true;
-    } else {
-      req.isUpdated = false;
-    }
+    const updatedProduct = await applyProductChanges(
+      productToUpdate,
+      updatedProperties
+    );
+    const savedProduct = await updateProductInDb(id, updatedProduct);
+    req.updatedProduct = savedProduct;
   } else {
     res.status(404).json("Product not found");
   }
-  //logica de mandar a la base de datos
   next();
 }
 
-function deleteProduct(req, res, next) {
-  const { id } = req.body;
-  //traer producto de la base de datos por su id y reemplazar por este. Ver si no hace falta pedir el ID aca.
-  const PRODUCTS = [{ id: 1 }];
-  const productToDelete = findProduct(PRODUCTS, id);
-
+async function deleteProduct(req, res, next) {
+  const id = +req.params.productId;
+  const productToDelete = await findProductById(id);
   if (productToDelete) {
-    // borrar producto
-    req.isDeleted = true;
+    const isDeleted = await dataBase().then(async () => {
+      const query = deleteQuery("products", `idproducts = ${id}`);
+      await sequelize.query(query, { raw: true });
+      return true;
+    });
+
+    req.isDeleted = await isDeleted;
   } else {
     res.status(404).json("Product not found");
   }
-  //logica de mandar a la base de datos
   next();
 }
 
