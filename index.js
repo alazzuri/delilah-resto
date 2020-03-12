@@ -14,16 +14,22 @@ const {
 
 //CONEXION BASE DE DATOS
 
-const dataBase = async () => await dbAuthentication;
+const dataBase = async () => {
+  return await dbAuthentication();
+};
 
-dataBase().then(async () => {
+async function nada() {
   const query = "SELECT * FROM delilah_resto.users";
   const [resultados] = await sequelize.query(query, { raw: true });
-  // console.log(resultados);
-});
+  console.log(resultados);
+} /// esto eliminar, era una prueba. CORREGIR LAS FUNCIONES SACANDO EL .THEN PARA QUE QUEDEN CON ESTE FORMARO
 
+nada();
 //SET UP SERVER
-server.listen(3000, () => console.log("Server Started"));
+server.listen(3000, () => {
+  dataBase();
+  console.log("Server Started");
+});
 
 server.use(bodyParser.json(), CORS());
 
@@ -180,7 +186,7 @@ async function findUserbyUsername(username) {
   const existingUser = await dataBase().then(async () => {
     const query = selectQuery(
       "users",
-      "username, password, isAdmin",
+      "idusers, username, password, isAdmin",
       `username = '${username}'`
     );
 
@@ -323,15 +329,16 @@ async function deleteProduct(req, res, next) {
       return true;
     });
 
-    req.isDeleted = await isDeleted;
+    req.isDeleted = isDeleted;
   } else {
     res.status(404).json("Product not found");
   }
   next();
 }
 
-function createOrder(req, res, next) {
-  const { user, products } = req.body;
+async function createOrder(req, res, next) {
+  const { user, products, payment_method } = req.body;
+  const addedOrder = await addOrderInDb(user, products, payment_method);
   if (user && products) {
     //logica de mandar a la base de datos
     req.isCreated = true;
@@ -340,6 +347,84 @@ function createOrder(req, res, next) {
   }
   next();
 }
+
+async function addOrderInDb(user, products, payment_method) {
+  const userData = await findUserbyUsername(user);
+  const userId = userData.idusers;
+  const orderTime = new Date().toLocaleTimeString(); /// ver como se pasa a formato base de datos
+  const [orderDesc, totalPrice] = await obtainOrderDescAndPrice(products);
+  const addedOrder = await createOrderRegistry(
+    orderTime,
+    orderDesc,
+    totalPrice,
+    payment_method,
+    userId
+  );
+  console.log(addedOrder);
+}
+
+async function obtainOrderDescAndPrice(products) {
+  let orderDescription = "";
+  let subtotal = 0;
+  for (let i = 0; i < products.length; i++) {
+    orderDescription = orderDescription + (await printDescName(products[i]));
+    subtotal = +subtotal + +(await findProductPrice(products[i]));
+  }
+  return [orderDescription, subtotal];
+}
+
+async function printDescName(product) {
+  const { productId, quantity } = product;
+  const productName = (await findProductById(productId)).product_name;
+  const productDesc = `${quantity}x${productName.slice(0, 5)} `;
+  return productDesc;
+}
+
+async function findProductPrice(product) {
+  const { productId, quantity } = product;
+  const productPrice = (await findProductById(productId)).product_price;
+  const subtotal = `${+productPrice * +quantity}`;
+  return subtotal;
+}
+
+async function createOrderRegistry(
+  orderTime,
+  orderDescription,
+  totalPrice,
+  paymentMethod,
+  user
+) {
+  const query = insertQuery(
+    "orders",
+    "order_time, order_description, order_amount, payment_method, id_user",
+    [orderTime, orderDescription, totalPrice, paymentMethod, user]
+  );
+  const [addedRegistry] = await sequelize.query(query, { raw: true });
+  return addedRegistry;
+}
+
+async function createOrderRelationship(orderId, products) {
+  products.forEach(async product => {
+    const query = insertQuery("order_products", "order, product", [
+      orderId,
+      product
+    ]);
+    console.log(query);
+
+    const addedRelationship = await sequelize.query(query, { raw: true });
+    // console.log(addedRelationship);
+  });
+}
+
+createOrderRelationship(1, [1, 2, 3]);
+// addOrderInDb(
+//   "alezzuri49",
+//   [
+//     { productId: 1, quantity: 2 },
+//     { productId: 3, quantity: 1 }
+//   ],
+//   "cash"
+// );
 
 function findOrder(orderDb, id) {
   const foundOrder = orderDb.find(order => +order.id === +id);
