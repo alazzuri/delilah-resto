@@ -22,7 +22,7 @@ const dataBase = async () => {
 async function nada() {
   const query = "SELECT * FROM delilah_resto.users";
   const [resultados] = await sequelize.query(query, { raw: true });
-  console.log(resultados);
+  // console.log(resultados);
 } /// esto eliminar, era una prueba. CORREGIR LAS FUNCIONES SACANDO EL .THEN PARA QUE QUEDEN CON ESTE FORMARO
 
 nada();
@@ -92,9 +92,9 @@ server.get("/v1/orders/", validateAuth, (req, res) => {
 });
 
 server.post("/v1/orders/", createOrder, (req, res) => {
-  const { isCreated } = req;
-  isCreated
-    ? res.status(201).json("Order Created")
+  const { createdOrder } = req;
+  createdOrder
+    ? res.status(201).json(createdOrder)
     : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
 });
 
@@ -340,11 +340,10 @@ async function deleteProduct(req, res, next) {
 async function createOrder(req, res, next) {
   const { user, products, payment_method } = req.body;
   const addedOrder = await addOrderInDb(user, products, payment_method);
-  if (user && products) {
-    //logica de mandar a la base de datos
-    req.isCreated = true;
+  if (addedOrder) {
+    req.createdOrder = addedOrder;
   } else {
-    req.isCreated = false;
+    req.createdOrder = false;
   }
   next();
 }
@@ -361,7 +360,13 @@ async function addOrderInDb(user, products, payment_method) {
     payment_method,
     userId
   );
-  console.log(addedOrder);
+  addedRelationship = await createOrderRelationship(addedOrder, products);
+  if (addedRelationship) {
+    const orderInfo = await printOrderInfo(addedOrder);
+    return orderInfo;
+  } else {
+    console.error(err);
+  }
 }
 
 async function obtainOrderDescAndPrice(products) {
@@ -400,32 +405,53 @@ async function createOrderRegistry(
     "order_time, order_description, order_amount, payment_method, id_user",
     [orderTime, orderDescription, totalPrice, paymentMethod, user]
   );
+
   const [addedRegistry] = await sequelize.query(query, { raw: true });
   return addedRegistry;
 }
 
 async function createOrderRelationship(orderId, products) {
   products.forEach(async product => {
-    const query = insertQuery("order_products", "order, product", [
-      orderId,
-      product
-    ]);
-    console.log(query);
-
-    const addedRelationship = await sequelize.query(query, { raw: true });
-    // console.log(addedRelationship);
+    const { productId, quantity } = product;
+    const query = insertQuery(
+      "orders_products",
+      "order_id, product_id, quantity",
+      [orderId, productId, quantity]
+    );
+    await sequelize.query(query, { raw: true });
   });
+  return true;
 }
 
-createOrderRelationship(1, [1, 2, 3]);
-// addOrderInDb(
-//   "alezzuri49",
-//   [
-//     { productId: 1, quantity: 2 },
-//     { productId: 3, quantity: 1 }
-//   ],
-//   "cash"
-// );
+async function printOrderInfo(orderId) {
+  const ordersQuery = joinQuery(
+    "orders",
+    "orders.*, users.username, users.firstname, users.lastname,users.address, users.email, users.phone_number",
+    ["users ON orders.id_user = users.idusers"],
+    `idorders = ${orderId}`
+  );
+
+  const [orderInfo] = await sequelize.query(ordersQuery, { raw: true });
+
+  const completeDesc = async () => {
+    return Promise.all(
+      orderInfo.map(async order => {
+        const productsQuery = joinQuery(
+          "orders_products",
+          "orders_products.quantity, products.*",
+          [`products ON orders_products.product_id = products.idproducts`],
+          `order_id = ${order.idorders}`
+        );
+        const [productsInfo] = await sequelize.query(productsQuery, {
+          raw: true
+        });
+        order.products = await productsInfo;
+        return order;
+      })
+    );
+  };
+  return completeDesc();
+}
 
 function findOrder(orderDb, id) {
   const foundOrder = orderDb.find(order => +order.id === +id);
