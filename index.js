@@ -9,7 +9,8 @@ const {
   insertQuery,
   selectQuery,
   updateQuery,
-  deleteQuery
+  deleteQuery,
+  joinQuery
 } = require("./db");
 
 //CONEXION BASE DE DATOS

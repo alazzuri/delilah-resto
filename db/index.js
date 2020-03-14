@@ -36,11 +36,25 @@ function deleteQuery(table, conditions) {
   return query;
 }
 
+function joinQuery(mainTable, columns, joiners, conditions) {
+  const fullJoiners = joiners
+    .map(element => `JOIN ${element} `)
+    .toString()
+    .replace(/,/g, "");
+
+  const query =
+    `SELECT ${columns} FROM ${mainTable}` +
+    ` ${fullJoiners}` +
+    `${conditions ? `WHERE ${conditions}` : ""}`;
+  return query;
+}
+
 module.exports = {
   sequelize,
   dbAuthentication,
   insertQuery,
   selectQuery,
   updateQuery,
-  deleteQuery
+  deleteQuery,
+  joinQuery
 };
