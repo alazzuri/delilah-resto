@@ -5,7 +5,6 @@ const CORS = require("cors");
 const { JWT, signature } = require("./auth");
 const {
   sequelize,
-  dbAuthentication,
   insertQuery,
   selectQuery,
   updateQuery,
@@ -13,22 +12,8 @@ const {
   joinQuery
 } = require("./db");
 
-//CONEXION BASE DE DATOS
-
-const dataBase = async () => {
-  return await dbAuthentication();
-};
-
-async function nada() {
-  const query = "SELECT * FROM delilah_resto.users";
-  const [resultados] = await sequelize.query(query, { raw: true });
-  // console.log(resultados);
-} /// esto eliminar, era una prueba. CORREGIR LAS FUNCIONES SACANDO EL .THEN PARA QUE QUEDEN CON ESTE FORMARO
-
-nada();
 //SET UP SERVER
 server.listen(3000, () => {
-  dataBase();
   console.log("Server Started");
 });
 
@@ -169,23 +154,23 @@ async function registerUser(req, res, next) {
     phone_number
   ) {
     try {
-        const query = insertQuery(
-          "users",
-          "username, password, firstname, lastname, address, email, phone_number, isAdmin",
-          [
-            username,
-            password,
-            firstname,
-            lastname,
-            address,
-            email,
-            phone_number,
-            isAdmin
-          ]
-        );
+      const query = insertQuery(
+        "users",
+        "username, password, firstname, lastname, address, email, phone_number, isAdmin",
+        [
+          username,
+          password,
+          firstname,
+          lastname,
+          address,
+          email,
+          phone_number,
+          isAdmin
+        ]
+      );
       [userId] = await sequelize.query(query, { raw: true });
       req.createdUserId = userId;
-        next();
+      next();
     } catch (err) {
       next(new Error(err));
     }
@@ -260,7 +245,7 @@ async function createProduct(req, res, next) {
 }
 
 async function newProduct(product_name, product_photo, product_price) {
-  return dataBase().then(async () => {
+  return async () => {
     const query = insertQuery(
       "products",
       "product_name, product_photo, product_price",
@@ -268,11 +253,11 @@ async function newProduct(product_name, product_photo, product_price) {
     );
     const [addedProduct] = await sequelize.query(query, { raw: true });
     return addedProduct;
-  });
+  };
 }
 
 async function findProductById(id) {
-  const existingProduct = await dataBase().then(async () => {
+  const existingProduct = async () => {
     const query = selectQuery("products", "*", `idproducts = ${id}`);
 
     const [dbProduct] = await sequelize.query(query, { raw: true });
@@ -281,9 +266,9 @@ async function findProductById(id) {
       element => element.idproducts === id
     );
     return foundProduct;
-  });
+  };
 
-  return existingProduct;
+  return await existingProduct();
 }
 
 async function applyProductChanges(productToUpdate, updatedProperties) {
@@ -295,7 +280,7 @@ async function applyProductChanges(productToUpdate, updatedProperties) {
 
 async function updateProductInDb(id, product) {
   const { product_name, product_photo, product_price } = product;
-  updatedProduct = await dataBase().then(async () => {
+  updatedProduct = async () => {
     const query = updateQuery(
       "products",
       `product_name = '${product_name}', product_photo = '${product_photo}', product_price = '${product_price}'`,
@@ -304,8 +289,8 @@ async function updateProductInDb(id, product) {
     await sequelize.query(query, { raw: true });
     const dbProduct = await findProductById(id);
     return dbProduct;
-  });
-  return updatedProduct;
+  };
+  return await updatedProduct();
 }
 
 async function updateProduct(req, res, next) {
@@ -329,13 +314,13 @@ async function deleteProduct(req, res, next) {
   const id = +req.params.productId;
   const productToDelete = await findProductById(id);
   if (productToDelete) {
-    const isDeleted = await dataBase().then(async () => {
+    const isDeleted = async () => {
       const query = deleteQuery("products", `idproducts = ${id}`);
       await sequelize.query(query, { raw: true });
       return true;
-    });
+    };
 
-    req.isDeleted = isDeleted;
+    req.isDeleted = await isDeleted();
   } else {
     res.status(404).json("Product not found");
   }
