@@ -2,7 +2,6 @@ const express = require("express");
 const server = express();
 const bodyParser = require("body-parser");
 const CORS = require("cors");
-
 const {
   registerUser,
   validateExistingUser,
