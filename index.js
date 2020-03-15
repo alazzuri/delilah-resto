@@ -42,9 +42,8 @@ server.post("/v1/users/", validateExistingUser, registerUser, (req, res) => {
 
 server.post("/v1/users/login", validateCredentials, (req, res) => {
   const { jwtToken } = req;
-  jwtToken !== null
-    ? res.status(200).json(jwtToken) // ver de mandar en el HEADER la validez del TOken
-    : res.status(400).json("Invalid username or password supplied");
+  const loginResponse = { token: jwtToken };
+  jwtToken && res.status(200).json(loginResponse);
 });
 
 // PRODUCTS ENDOPINTS
@@ -214,18 +213,15 @@ async function validateCredentials(req, res, next) {
   const { username, password } = req.body;
   const registeredUser = await findUserbyUsername(username);
   if (registeredUser) {
-    const dbUsername = registeredUser.username;
-    const dbPassword = registeredUser.password;
-    const isAdmin = registeredUser.isAdmin;
-
-    if (username === dbUsername && password === dbPassword) {
+    const { password: dbPassword, isAdmin } = registeredUser;
+    if (password === dbPassword) {
       const token = JWT.sign({ username, isAdmin }, signature);
       req.jwtToken = token;
     } else {
-      req.jwtToken = null;
+      res.status(400).json("Wrong password");
     }
   } else {
-    req.jwtToken = null;
+    res.status(400).json("Invalid Username");
   }
   next();
 }
