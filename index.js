@@ -5,7 +5,6 @@ const CORS = require("cors");
 const { JWT, signature } = require("./auth");
 const {
   sequelize,
-  dbAuthentication,
   insertQuery,
   selectQuery,
   updateQuery,
@@ -13,22 +12,8 @@ const {
   joinQuery
 } = require("./db");
 
-//CONEXION BASE DE DATOS
-
-const dataBase = async () => {
-  return await dbAuthentication();
-};
-
-async function nada() {
-  const query = "SELECT * FROM delilah_resto.users";
-  const [resultados] = await sequelize.query(query, { raw: true });
-  // console.log(resultados);
-} /// esto eliminar, era una prueba. CORREGIR LAS FUNCIONES SACANDO EL .THEN PARA QUE QUEDEN CON ESTE FORMARO
-
-nada();
 //SET UP SERVER
 server.listen(3000, () => {
-  dataBase();
   console.log("Server Started");
 });
 
@@ -36,17 +21,14 @@ server.use(bodyParser.json(), CORS());
 
 // USERS ENDPOINTS
 server.post("/v1/users/", validateExistingUser, registerUser, (req, res) => {
-  const { isCreated } = req;
-  isCreated
-    ? res.status(201).json("User Created")
-    : res.status(400).json("Missing Arguments");
+  const { createdUserId } = req;
+  createdUserId && res.status(201).json({ userId: createdUserId });
 });
 
 server.post("/v1/users/login", validateCredentials, (req, res) => {
   const { jwtToken } = req;
-  jwtToken !== null
-    ? res.status(200).json(jwtToken) // ver de mandar en el HEADER la validez del TOken
-    : res.status(400).json("Invalid username or password supplied");
+  const loginResponse = { token: jwtToken };
+  jwtToken && res.status(200).json(loginResponse);
 });
 
 // PRODUCTS ENDOPINTS
@@ -120,14 +102,12 @@ server.delete("/v1/orders/:orderId", validateAuth, deleteOrder, (req, res) => {
 
 async function findUserByName(req) {
   const { firstname, lastname } = req.body;
-
-  const userExists = await dataBase().then(async () => {
+  const userExists = async () => {
     const query = selectQuery(
       "users",
       "firstname, lastname",
       `firstname = '${firstname}' AND lastname = '${lastname}'`
     );
-
     const [dbUser] = await sequelize.query(query, { raw: true });
     const existingUser = await dbUser.find(
       element =>
@@ -135,16 +115,25 @@ async function findUserByName(req) {
     );
 
     return existingUser ? true : false;
-  });
-  return userExists;
+  };
+  return await userExists();
 }
 
 async function validateExistingUser(req, res, next) {
   const existingUser = await findUserByName(req);
-  !existingUser ? next() : res.status(409).json("User already exists");
+  if (!existingUser) {
+    const dbUsers = await findUserbyUsername(req.body.username);
+    if (!dbUsers) {
+      next();
+    } else {
+      res.status(409).json("Username already in use");
+    }
+  } else {
+    res.status(409).json("User already exists");
+  }
 }
 
-function registerUser(req, res, next) {
+async function registerUser(req, res, next) {
   const {
     username,
     password,
@@ -164,69 +153,60 @@ function registerUser(req, res, next) {
     email &&
     phone_number
   ) {
-    dataBase()
-      .then(async () => {
-        const query = insertQuery(
-          "users",
-          "username, password, firstname, lastname, address, email, phone_number, isAdmin",
-          [
-            username,
-            password,
-            firstname,
-            lastname,
-            address,
-            email,
-            phone_number,
-            isAdmin
-          ]
-        );
-        await sequelize.query(query, { raw: true });
-        return true;
-      })
-      .then(response => {
-        req.isCreated = response;
-        next();
-      });
+    try {
+      const query = insertQuery(
+        "users",
+        "username, password, firstname, lastname, address, email, phone_number, isAdmin",
+        [
+          username,
+          password,
+          firstname,
+          lastname,
+          address,
+          email,
+          phone_number,
+          isAdmin
+        ]
+      );
+      [userId] = await sequelize.query(query, { raw: true });
+      req.createdUserId = userId;
+      next();
+    } catch (err) {
+      next(new Error(err));
+    }
   } else {
-    req.isCreated = false;
-    next();
+    res.status(400).json("Missing Arguments");
   }
 }
 
 async function findUserbyUsername(username) {
-  const existingUser = await dataBase().then(async () => {
+  const existingUser = async () => {
     const query = selectQuery(
       "users",
       "idusers, username, password, isAdmin",
       `username = '${username}'`
     );
-
     const [dbUser] = await sequelize.query(query, { raw: true });
-    const foundUser = await dbUser.find(
-      element => element.username === username
-    );
+    const foundUser = dbUser[0];
     return foundUser;
-  });
+  };
 
-  return existingUser;
+  return existingUser();
 }
 
 async function validateCredentials(req, res, next) {
   const { username, password } = req.body;
   const registeredUser = await findUserbyUsername(username);
   if (registeredUser) {
-    const dbUsername = registeredUser.username;
-    const dbPassword = registeredUser.password;
-    const isAdmin = registeredUser.isAdmin;
-
-    if (username === dbUsername && password === dbPassword) {
+    const { password: dbPassword, isAdmin } = registeredUser;
+    if (password === dbPassword) {
       const token = JWT.sign({ username, isAdmin }, signature);
       req.jwtToken = token;
     } else {
-      req.jwtToken = null;
+      res.status(400).json("Wrong password");
     }
   } else {
-    req.jwtToken = null;
+    res.status(400).json("Invalid Username");
   }
   next();
 }
@@ -265,7 +245,7 @@ async function createProduct(req, res, next) {
 }
 
 async function newProduct(product_name, product_photo, product_price) {
-  return dataBase().then(async () => {
+  return async () => {
     const query = insertQuery(
       "products",
       "product_name, product_photo, product_price",
@@ -273,11 +253,11 @@ async function newProduct(product_name, product_photo, product_price) {
     );
     const [addedProduct] = await sequelize.query(query, { raw: true });
     return addedProduct;
-  });
+  };
 }
 
 async function findProductById(id) {
-  const existingProduct = await dataBase().then(async () => {
+  const existingProduct = async () => {
     const query = selectQuery("products", "*", `idproducts = ${id}`);
 
     const [dbProduct] = await sequelize.query(query, { raw: true });
@@ -286,9 +266,9 @@ async function findProductById(id) {
       element => element.idproducts === id
     );
     return foundProduct;
-  });
+  };
 
-  return existingProduct;
+  return await existingProduct();
 }
 
 async function applyProductChanges(productToUpdate, updatedProperties) {
@@ -300,7 +280,7 @@ async function applyProductChanges(productToUpdate, updatedProperties) {
 
 async function updateProductInDb(id, product) {
   const { product_name, product_photo, product_price } = product;
-  updatedProduct = await dataBase().then(async () => {
+  updatedProduct = async () => {
     const query = updateQuery(
       "products",
       `product_name = '${product_name}', product_photo = '${product_photo}', product_price = '${product_price}'`,
@@ -309,8 +289,8 @@ async function updateProductInDb(id, product) {
     await sequelize.query(query, { raw: true });
     const dbProduct = await findProductById(id);
     return dbProduct;
-  });
-  return updatedProduct;
+  };
+  return await updatedProduct();
 }
 
 async function updateProduct(req, res, next) {
@@ -334,13 +314,13 @@ async function deleteProduct(req, res, next) {
   const id = +req.params.productId;
   const productToDelete = await findProductById(id);
   if (productToDelete) {
-    const isDeleted = await dataBase().then(async () => {
+    const isDeleted = async () => {
       const query = deleteQuery("products", `idproducts = ${id}`);
       await sequelize.query(query, { raw: true });
       return true;
-    });
+    };
 
-    req.isDeleted = isDeleted;
+    req.isDeleted = await isDeleted();
   } else {
     res.status(404).json("Product not found");
   }

@@ -3,8 +3,6 @@ const sequelize = new Sequelize(
   "mysql://root:delilah2020@localhost:3306/delilah_resto" ///Acordarse de borrar esto
 );
 
-const dbAuthentication = async () => await sequelize.authenticate();
-
 //INSERT QUERY
 function insertQuery(table, properties, values) {
   const dataToInsert = values.map(value => `'${value}'`).join(",");
@@ -51,7 +49,6 @@ function joinQuery(mainTable, columns, joiners, conditions) {
 
 module.exports = {
   sequelize,
-  dbAuthentication,
   insertQuery,
   selectQuery,
   updateQuery,
