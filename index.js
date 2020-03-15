@@ -124,7 +124,6 @@ async function findUserByName(req) {
       "firstname, lastname",
       `firstname = '${firstname}' AND lastname = '${lastname}'`
     );
-
     const [dbUser] = await sequelize.query(query, { raw: true });
     const existingUser = await dbUser.find(
       element =>
@@ -138,7 +137,16 @@ async function findUserByName(req) {
 
 async function validateExistingUser(req, res, next) {
   const existingUser = await findUserByName(req);
-  !existingUser ? next() : res.status(409).json("User already exists");
+  if (!existingUser) {
+    const dbUsers = await findUserbyUsername(req.body.username);
+    if (!dbUsers) {
+      next();
+    } else {
+      res.status(409).json("Username already in use");
+    }
+  } else {
+    res.status(409).json("User already exists");
+  }
 }
 
 async function registerUser(req, res, next) {
@@ -188,21 +196,18 @@ async function registerUser(req, res, next) {
 }
 
 async function findUserbyUsername(username) {
-  const existingUser = await dataBase().then(async () => {
+  const existingUser = async () => {
     const query = selectQuery(
       "users",
       "idusers, username, password, isAdmin",
       `username = '${username}'`
     );
-
     const [dbUser] = await sequelize.query(query, { raw: true });
-    const foundUser = await dbUser.find(
-      element => element.username === username
-    );
+    const foundUser = dbUser[0];
     return foundUser;
-  });
+  };
 
-  return existingUser;
+  return existingUser();
 }
 
 async function validateCredentials(req, res, next) {
