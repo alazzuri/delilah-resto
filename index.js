@@ -87,8 +87,9 @@ server.delete(
 
 // ORDERS ENDPOINTS
 
-server.get("/v1/orders/", validateAuth, (req, res) => {
-  res.status(200).json({ productsDB: "Database" }); // remplazar por el listado de la DB.
+server.get("/v1/orders/", validateAuth, listOrders, (req, res) => {
+  const { ordersList } = req;
+  res.status(200).json(ordersList);
 });
 
 server.post("/v1/orders/", createOrder, (req, res) => {
@@ -434,29 +435,40 @@ async function printOrderInfo(orderId) {
   const [orderInfo] = await sequelize.query(ordersQuery, { raw: true });
 
   const completeDesc = async () => {
-    return Promise.all(
-      orderInfo.map(async order => {
-        const productsQuery = joinQuery(
-          "orders_products",
-          "orders_products.quantity, products.*",
-          [`products ON orders_products.product_id = products.idproducts`],
-          `order_id = ${order.idorders}`
-        );
-        const [productsInfo] = await sequelize.query(productsQuery, {
-          raw: true
-        });
-        order.products = await productsInfo;
-        return order;
-      })
+    const order = orderInfo[0];
+    const productsQuery = joinQuery(
+      "orders_products",
+      "orders_products.quantity, products.*",
+      [`products ON orders_products.product_id = products.idproducts`],
+      `order_id = ${order.idorders}`
     );
+    const [productsInfo] = await sequelize.query(productsQuery, {
+      raw: true
+    });
+    order.products = await productsInfo;
+    return order;
   };
+
   return completeDesc();
 }
 
-function findOrder(orderDb, id) {
-  const foundOrder = orderDb.find(order => +order.id === +id);
-  return foundOrder;
+async function listOrders(req, res, next) {
+  const ordersQuery = selectQuery("orders", "idorders");
+  const [ordersIds] = await sequelize.query(ordersQuery, { raw: true });
+  const detailedOrders = async () => {
+    return Promise.all(
+      ordersIds.map(async order => printOrderInfo(order.idorders))
+    );
+  };
+  req.ordersList = await detailedOrders();
+  next();
 }
+
+// listOrders();
+// function findOrder(orderDb, id) {
+//   const foundOrder = orderDb.find(order => +order.id === +id);
+//   return foundOrder;
+// }
 
 function updateOrderStatus(req, res, next) {
   const { orderId, status } = req.body; // unificar nombres de constantes
