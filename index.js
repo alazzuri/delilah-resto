@@ -111,6 +111,11 @@ server.put(
   }
 );
 
+server.delete("/v1/orders/:orderId", validateAuth, deleteOrder, (req, res) => {
+  const { isDeleted } = req;
+  isDeleted && res.status(200).json("Deleted"); //Actualizar msj en la DOC de la API. Ver todos los status code
+});
+
 // UTILS
 
 async function findUserByName(req) {
@@ -505,6 +510,23 @@ async function findOrderbyId(orderId) {
   };
 
   return existingOrder();
+}
+
+async function deleteOrder(req, res, next) {
+  const id = +req.params.orderId;
+  const orderToDelete = await findOrderbyId(id);
+  if (orderToDelete) {
+    try {
+      const query = deleteQuery("orders", `idorders = ${id}`);
+      await sequelize.query(query, { raw: true });
+      req.isDeleted = true;
+      next();
+    } catch (err) {
+      next(new Error(err));
+    }
+  } else {
+    res.status(404).json("Order not found");
+  }
 }
 
 // ERROR DETECTION
