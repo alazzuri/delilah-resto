@@ -99,13 +99,17 @@ server.post("/v1/orders/", createOrder, (req, res) => {
     : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
 });
 
-server.put("/v1/orders/", validateAuth, updateOrderStatus, (req, res) => {
-  //traer listado de productos de la DB)
-  const { isUpdated } = req;
-  isUpdated
-    ? res.status(202).json("Order Udpated") //Actualizar msj en la DOC de la API. Ver todos los status code
-    : res.status(405).json("Invalid status suplied"); // ver el status code y cambiar en la DOC de la API
-});
+server.put(
+  "/v1/orders/:orderId",
+  validateAuth,
+  updateOrderStatus,
+  (req, res) => {
+    const { updatedOrder } = req;
+    updatedOrder
+      ? res.status(202).json(updatedOrder) //Actualizar msj en la DOC de la API. Ver todos los status code
+      : res.status(405).json("Invalid status suplied"); // ver el status code y cambiar en la DOC de la API
+  }
+);
 
 // UTILS
 
@@ -470,23 +474,37 @@ async function listOrders(req, res, next) {
 //   return foundOrder;
 // }
 
-function updateOrderStatus(req, res, next) {
-  const { orderId, status } = req.body; // unificar nombres de constantes
-  //traer producto de la base de datos por su id y reemplazar por este. Ver si no hace falta pedir el ID aca.
-  const ORDERS = [{ id: 1 }];
-  const orderToUpdate = findOrder(ORDERS, orderId);
+async function updateOrderStatus(req, res, next) {
+  const id = +req.params.orderId;
+  const { status } = req.body; // unificar nombres de constantes
+
+  const orderToUpdate = await findOrderbyId(id);
 
   if (orderToUpdate) {
-    if (status) {
-      req.isUpdated = true;
-      //logica de mandar a la base de datos
-    } else {
-      req.isUpdated = false;
-    }
+    const query = updateQuery(
+      "orders",
+      `status = '${status}'`,
+      `idorders = ${id}`
+    );
+    await sequelize.query(query, { raw: true });
+    req.updatedOrder = await findOrderbyId(id);
   } else {
-    res.status(404).json("Product not found");
+    res.status(404).json("Order not found");
   }
   next();
+}
+
+async function findOrderbyId(orderId) {
+  const existingOrder = async () => {
+    const query = selectQuery("orders", "*", `idorders = ${orderId}`);
+    const [dbOrder] = await sequelize.query(query, { raw: true });
+    const foundOrder = await dbOrder.find(
+      element => element.idorders === orderId
+    );
+    return foundOrder;
+  };
+
+  return existingOrder();
 }
 
 // ERROR DETECTION
