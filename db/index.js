@@ -49,7 +49,6 @@ function joinQuery(mainTable, columns, joiners, conditions) {
 
 module.exports = {
   sequelize,
-  dbAuthentication,
   insertQuery,
   selectQuery,
   updateQuery,
