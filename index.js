@@ -36,10 +36,8 @@ server.use(bodyParser.json(), CORS());
 
 // USERS ENDPOINTS
 server.post("/v1/users/", validateExistingUser, registerUser, (req, res) => {
-  const { isCreated } = req;
-  isCreated
-    ? res.status(201).json("User Created")
-    : res.status(400).json("Missing Arguments");
+  const { createdUserId } = req;
+  createdUserId && res.status(201).json({ userId: createdUserId });
 });
 
 server.post("/v1/users/login", validateCredentials, (req, res) => {
@@ -120,8 +118,7 @@ server.delete("/v1/orders/:orderId", validateAuth, deleteOrder, (req, res) => {
 
 async function findUserByName(req) {
   const { firstname, lastname } = req.body;
-
-  const userExists = await dataBase().then(async () => {
+  const userExists = async () => {
     const query = selectQuery(
       "users",
       "firstname, lastname",
@@ -135,8 +132,8 @@ async function findUserByName(req) {
     );
 
     return existingUser ? true : false;
-  });
-  return userExists;
+  };
+  return await userExists();
 }
 
 async function validateExistingUser(req, res, next) {
@@ -144,7 +141,7 @@ async function validateExistingUser(req, res, next) {
   !existingUser ? next() : res.status(409).json("User already exists");
 }
 
-function registerUser(req, res, next) {
+async function registerUser(req, res, next) {
   const {
     username,
     password,
@@ -164,8 +161,7 @@ function registerUser(req, res, next) {
     email &&
     phone_number
   ) {
-    dataBase()
-      .then(async () => {
+    try {
         const query = insertQuery(
           "users",
           "username, password, firstname, lastname, address, email, phone_number, isAdmin",
@@ -180,16 +176,14 @@ function registerUser(req, res, next) {
             isAdmin
           ]
         );
-        await sequelize.query(query, { raw: true });
-        return true;
-      })
-      .then(response => {
-        req.isCreated = response;
+      [userId] = await sequelize.query(query, { raw: true });
+      req.createdUserId = userId;
         next();
-      });
+    } catch (err) {
+      next(new Error(err));
+    }
   } else {
-    req.isCreated = false;
-    next();
+    res.status(400).json("Missing Arguments");
   }
 }
 
