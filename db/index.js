@@ -3,12 +3,12 @@ const sequelize = new Sequelize(
   "mysql://root:delilah2020@localhost:3306/delilah_resto" ///Acordarse de borrar esto
 );
 
-const dbAuthentication = sequelize.authenticate();
+const dbAuthentication = async () => await sequelize.authenticate();
 
 //INSERT QUERY
 function insertQuery(table, properties, values) {
   const dataToInsert = values.map(value => `'${value}'`).join(",");
-  const query = `INSERT INTO ${table}(${properties}) VALUES (${dataToInsert})`;
+  const query = `INSERT INTO ${table} (${properties}) VALUES (${dataToInsert})`;
   return query;
 }
 
@@ -36,11 +36,25 @@ function deleteQuery(table, conditions) {
   return query;
 }
 
+function joinQuery(mainTable, columns, joiners, conditions) {
+  const fullJoiners = joiners
+    .map(element => `JOIN ${element} `)
+    .toString()
+    .replace(/,/g, "");
+
+  const query =
+    `SELECT ${columns} FROM ${mainTable}` +
+    ` ${fullJoiners}` +
+    `${conditions ? `WHERE ${conditions}` : ""}`;
+  return query;
+}
+
 module.exports = {
   sequelize,
   dbAuthentication,
   insertQuery,
   selectQuery,
   updateQuery,
-  deleteQuery
+  deleteQuery,
+  joinQuery
 };
