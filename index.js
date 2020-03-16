@@ -81,9 +81,7 @@ server.get("/v1/orders/", validateAuth, listOrders, (req, res) => {
 
 server.post("/v1/orders/", createOrder, (req, res) => {
   const { createdOrder } = req;
-  createdOrder
-    ? res.status(201).json(createdOrder)
-    : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
+  createdOrder && res.status(201).json(createdOrder);
 });
 
 server.put(
@@ -92,9 +90,7 @@ server.put(
   updateOrderStatus,
   (req, res) => {
     const { updatedOrder } = req;
-    updatedOrder
-      ? res.status(202).json(updatedOrder) //Actualizar msj en la DOC de la API. Ver todos los status code
-      : res.status(405).json("Invalid status suplied"); // ver el status code y cambiar en la DOC de la API
+    updatedOrder && res.status(202).json(updatedOrder); //Actualizar msj en la DOC de la API. Ver todos los status code
   }
 );
 

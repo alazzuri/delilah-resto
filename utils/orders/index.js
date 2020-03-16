@@ -11,13 +11,17 @@ const { findProductById } = require("../products");
 
 async function createOrder(req, res, next) {
   const { user, products, payment_method } = req.body;
+  if (user && products && payment_method) {
+    try {
   const addedOrder = await addOrderInDb(user, products, payment_method);
-  if (addedOrder) {
     req.createdOrder = addedOrder;
+      next();
+    } catch (err) {
+      next(new Error(err));
+    }
   } else {
-    req.createdOrder = false;
+    res.status(405).json("Missing Arguments");
   }
-  next();
 }
 
 async function addOrderInDb(user, products, payment_method) {
@@ -124,6 +128,7 @@ async function printOrderInfo(orderId) {
 }
 
 async function listOrders(req, res, next) {
+  try {
   const ordersQuery = selectQuery("orders", "idorders");
   const [ordersIds] = await sequelize.query(ordersQuery, { raw: true });
   const detailedOrders = async () => {
@@ -133,14 +138,18 @@ async function listOrders(req, res, next) {
   };
   req.ordersList = await detailedOrders();
   next();
+  } catch (err) {
+    next(new Error(err));
+}
 }
 
 async function updateOrderStatus(req, res, next) {
   const id = +req.params.orderId;
   const { status } = req.body; // unificar nombres de constantes
-
+  const validStatus = validateStatus(status);
+  if (validStatus) {
+    try {
   const orderToUpdate = await findOrderbyId(id);
-
   if (orderToUpdate) {
     const query = updateQuery(
       "orders",
@@ -153,6 +162,24 @@ async function updateOrderStatus(req, res, next) {
     res.status(404).json("Order not found");
   }
   next();
+    } catch (err) {
+      next(new Error(err));
+    }
+  } else {
+    res.status(405).json("Invalid status suplied"); // ver el status code y cambiar en la DOC de la API
+  }
+}
+
+function validateStatus(submittedStatus) {
+  const validStatus = [
+    "new",
+    "confirmed",
+    "preparing",
+    "delivering",
+    "delivered"
+  ];
+  const existingStatus = validStatus.find(status => status === submittedStatus);
+  return existingStatus;
 }
 
 async function findOrderbyId(orderId) {
@@ -170,19 +197,19 @@ async function findOrderbyId(orderId) {
 
 async function deleteOrder(req, res, next) {
   const id = +req.params.orderId;
+  try {
   const orderToDelete = await findOrderbyId(id);
   if (orderToDelete) {
-    try {
       const query = deleteQuery("orders", `idorders = ${id}`);
       await sequelize.query(query, { raw: true });
       req.isDeleted = true;
       next();
+    } else {
+      res.status(404).json("Order not found");
+    }
     } catch (err) {
       next(new Error(err));
     }
-  } else {
-    res.status(404).json("Order not found");
-  }
 }
 
 module.exports = { createOrder, listOrders, updateOrderStatus, deleteOrder };
