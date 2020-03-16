@@ -20,16 +20,20 @@ async function findUserByName(req) {
 }
 
 async function validateExistingUser(req, res, next) {
-  const existingUser = await findUserByName(req);
-  if (!existingUser) {
-    const dbUsers = await findUserbyUsername(req.body.username);
-    if (!dbUsers) {
-      next();
+  try {
+    const existingUser = await findUserByName(req);
+    if (!existingUser) {
+      const dbUsers = await findUserbyUsername(req.body.username);
+      if (!dbUsers) {
+        next();
+      } else {
+        res.status(409).json("Username already in use");
+      }
     } else {
-      res.status(409).json("Username already in use");
+      res.status(409).json("User already exists");
     }
-  } else {
-    res.status(409).json("User already exists");
+  } catch (err) {
+    next(new Error(err));
   }
 }
 
