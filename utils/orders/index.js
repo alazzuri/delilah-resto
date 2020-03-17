@@ -13,8 +13,8 @@ async function createOrder(req, res, next) {
   const { user, products, payment_method } = req.body;
   if (user && products && payment_method) {
     try {
-  const addedOrder = await addOrderInDb(user, products, payment_method);
-    req.createdOrder = addedOrder;
+      const addedOrder = await addOrderInDb(user, products, payment_method);
+      req.createdOrder = addedOrder;
       next();
     } catch (err) {
       next(new Error(err));
@@ -67,7 +67,7 @@ async function findProductPrice(product) {
   const productPrice = (await findProductById(productId)).product_price;
   const subtotal = `${+productPrice * +quantity}`;
   return subtotal;
-}
+} /// llevar a productos
 
 async function createOrderRegistry(
   orderTime,
@@ -129,18 +129,18 @@ async function printOrderInfo(orderId) {
 
 async function listOrders(req, res, next) {
   try {
-  const ordersQuery = selectQuery("orders", "idorders");
-  const [ordersIds] = await sequelize.query(ordersQuery, { raw: true });
-  const detailedOrders = async () => {
-    return Promise.all(
-      ordersIds.map(async order => printOrderInfo(order.idorders))
-    );
-  };
-  req.ordersList = await detailedOrders();
-  next();
+    const ordersQuery = selectQuery("orders", "idorders");
+    const [ordersIds] = await sequelize.query(ordersQuery, { raw: true });
+    const detailedOrders = async () => {
+      return Promise.all(
+        ordersIds.map(async order => printOrderInfo(order.idorders))
+      );
+    };
+    req.ordersList = await detailedOrders();
+    next();
   } catch (err) {
     next(new Error(err));
-}
+  }
 }
 
 async function updateOrderStatus(req, res, next) {
@@ -149,19 +149,19 @@ async function updateOrderStatus(req, res, next) {
   const validStatus = validateStatus(status);
   if (validStatus) {
     try {
-  const orderToUpdate = await findOrderbyId(id);
-  if (orderToUpdate) {
-    const query = updateQuery(
-      "orders",
-      `status = '${status}'`,
-      `idorders = ${id}`
-    );
-    await sequelize.query(query, { raw: true });
-    req.updatedOrder = await findOrderbyId(id);
-  } else {
-    res.status(404).json("Order not found");
-  }
-  next();
+      const orderToUpdate = await findOrderbyId(id);
+      if (orderToUpdate) {
+        const query = updateQuery(
+          "orders",
+          `status = '${status}'`,
+          `idorders = ${id}`
+        );
+        await sequelize.query(query, { raw: true });
+        req.updatedOrder = await findOrderbyId(id);
+      } else {
+        res.status(404).json("Order not found");
+      }
+      next();
     } catch (err) {
       next(new Error(err));
     }
@@ -198,8 +198,8 @@ async function findOrderbyId(orderId) {
 async function deleteOrder(req, res, next) {
   const id = +req.params.orderId;
   try {
-  const orderToDelete = await findOrderbyId(id);
-  if (orderToDelete) {
+    const orderToDelete = await findOrderbyId(id);
+    if (orderToDelete) {
       const query = deleteQuery("orders", `idorders = ${id}`);
       await sequelize.query(query, { raw: true });
       req.isDeleted = true;
@@ -207,9 +207,9 @@ async function deleteOrder(req, res, next) {
     } else {
       res.status(404).json("Order not found");
     }
-    } catch (err) {
-      next(new Error(err));
-    }
+  } catch (err) {
+    next(new Error(err));
+  }
 }
 
 module.exports = { createOrder, listOrders, updateOrderStatus, deleteOrder };

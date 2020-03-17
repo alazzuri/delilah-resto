@@ -32,7 +32,7 @@ async function createProduct(req, res, next) {
       next(new Error(err));
     }
   } else {
-    res.status(405).json("Missing Arguments");
+    res.status(400).json("Missing Arguments");
   }
 }
 

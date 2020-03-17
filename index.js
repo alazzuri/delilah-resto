@@ -27,27 +27,24 @@ server.use(bodyParser.json(), CORS());
 // USERS ENDPOINTS
 server.post("/v1/users/", validateExistingUser, registerUser, (req, res) => {
   const { createdUserId } = req;
-  createdUserId && res.status(201).json({ userId: createdUserId });
+  res.status(201).json({ userId: createdUserId });
 });
 
 server.post("/v1/users/login", validateCredentials, (req, res) => {
   const { jwtToken } = req;
   const loginResponse = { token: jwtToken };
-  jwtToken && res.status(200).json(loginResponse);
+  res.status(200).json(loginResponse);
 });
 
 // PRODUCTS ENDOPINTS
-server.get("/v1/products/", async (req, res) => {
-  productsDb = await getProducts();
-  res.status(200).json(productsDb);
+server.get("/v1/products/", getProducts, (req, res) => {
+  const { productList } = req;
+  res.status(200).json(productList);
 });
 
 server.post("/v1/products/", validateAuth, createProduct, (req, res) => {
   const { addedProduct } = req;
-
-  addedProduct
-    ? res.status(201).json("Product Created")
-    : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
+  res.status(201).json(addedProduct);
 });
 
 server.put(
@@ -56,9 +53,7 @@ server.put(
   updateProduct,
   (req, res) => {
     const { updatedProduct } = req;
-    updatedProduct
-      ? res.status(202).json(updatedProduct) //Actualizar msj en la DOC de la API. Ver todos los status code// ver si se devuelve el producto o msje de exito
-      : res.status(405).json("Invalid Input"); // ver el status code y cambiar en la DOC de la API
+    res.status(202).json(updatedProduct); //Actualizar msj en la DOC de la API. Ver todos los status code// ver si se devuelve el producto o msje de exito
   }
 );
 
@@ -81,7 +76,7 @@ server.get("/v1/orders/", validateAuth, listOrders, (req, res) => {
 
 server.post("/v1/orders/", createOrder, (req, res) => {
   const { createdOrder } = req;
-  createdOrder && res.status(201).json(createdOrder);
+  res.status(201).json(createdOrder);
 });
 
 server.put(
@@ -90,7 +85,7 @@ server.put(
   updateOrderStatus,
   (req, res) => {
     const { updatedOrder } = req;
-    updatedOrder && res.status(202).json(updatedOrder); //Actualizar msj en la DOC de la API. Ver todos los status code
+    res.status(202).json(updatedOrder); //Actualizar msj en la DOC de la API. Ver todos los status code
   }
 );
 

@@ -20,7 +20,6 @@ function selectQuery(table, columns = "*", conditions = null) {
 }
 
 //UPDATE QUERY
-
 function updateQuery(table, changes, conditions) {
   const query =
     `UPDATE ${table} SET ${changes}` +
@@ -29,11 +28,13 @@ function updateQuery(table, changes, conditions) {
   return query;
 }
 
+//DELETE QUERY
 function deleteQuery(table, conditions) {
   const query = `DELETE FROM ${table} WHERE ${conditions}`;
   return query;
 }
 
+//JOIN QUERY
 function joinQuery(mainTable, columns, joiners, conditions) {
   const fullJoiners = joiners
     .map(element => `JOIN ${element} `)
