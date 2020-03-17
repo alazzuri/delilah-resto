@@ -6,9 +6,9 @@ async function validateCredentials(req, res, next) {
   try {
     const registeredUser = await findUserbyUsername(username);
     if (registeredUser) {
-      const { password: dbPassword, isAdmin } = registeredUser;
+      const { password: dbPassword, is_admin } = registeredUser;
       if (password === dbPassword) {
-        const token = JWT.sign({ username, isAdmin }, signature);
+        const token = JWT.sign({ username, is_admin }, signature);
         req.jwtToken = token;
         next();
       } else {
@@ -25,9 +25,9 @@ async function validateCredentials(req, res, next) {
 function validateAuth(req, res, next) {
   const token = req.headers.authorization;
   const validatedUser = JWT.verify(token, signature);
-  const { isAdmin } = validatedUser;
-  if (isAdmin) {
-    req.isAdmin = isAdmin;
+  const { is_admin } = validatedUser;
+  if (is_admin) {
+    req.is_admin = is_admin;
     next();
   } else {
     res.status(403).json("Forbidden");

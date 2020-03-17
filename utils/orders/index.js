@@ -26,7 +26,7 @@ async function createOrder(req, res, next) {
 
 async function addOrderInDb(user, products, payment_method) {
   const userData = await findUserbyUsername(user);
-  const userId = userData.idusers;
+  const userId = userData.user_id;
   const orderTime = new Date().toLocaleTimeString(); /// ver como se pasa a formato base de datos
   const [orderDesc, totalPrice] = await obtainOrderDescAndPrice(products);
   const addedOrder = await createOrderRegistry(
@@ -78,7 +78,7 @@ async function createOrderRegistry(
 ) {
   const query = insertQuery(
     "orders",
-    "order_time, order_description, order_amount, payment_method, id_user",
+    "order_time, order_description, order_amount, payment_method, user_id",
     [orderTime, orderDescription, totalPrice, paymentMethod, user]
   );
 
@@ -91,7 +91,7 @@ async function createOrderRelationship(orderId, products) {
     const { productId, quantity } = product;
     const query = insertQuery(
       "orders_products",
-      "order_id, product_id, quantity",
+      "order_id, product_id, product_quantity",
       [orderId, productId, quantity]
     );
     await sequelize.query(query, { raw: true });
@@ -103,8 +103,8 @@ async function printOrderInfo(orderId) {
   const ordersQuery = joinQuery(
     "orders",
     "orders.*, users.username, users.firstname, users.lastname,users.address, users.email, users.phone_number",
-    ["users ON orders.id_user = users.idusers"],
-    `idorders = ${orderId}`
+    ["users ON orders.id_user = users.user_id"],
+    `order_id = ${orderId}`
   );
 
   const [orderInfo] = await sequelize.query(ordersQuery, { raw: true });
@@ -113,9 +113,9 @@ async function printOrderInfo(orderId) {
     const order = orderInfo[0];
     const productsQuery = joinQuery(
       "orders_products",
-      "orders_products.quantity, products.*",
-      [`products ON orders_products.product_id = products.idproducts`],
-      `order_id = ${order.idorders}`
+      "orders_products.product_quantity, products.*",
+      [`products ON orders_products.product_id = products.product_id`],
+      `order_id = ${order.order_id}`
     );
     const [productsInfo] = await sequelize.query(productsQuery, {
       raw: true
@@ -129,11 +129,11 @@ async function printOrderInfo(orderId) {
 
 async function listOrders(req, res, next) {
   try {
-    const ordersQuery = selectQuery("orders", "idorders");
+    const ordersQuery = selectQuery("orders", "order_id");
     const [ordersIds] = await sequelize.query(ordersQuery, { raw: true });
     const detailedOrders = async () => {
       return Promise.all(
-        ordersIds.map(async order => printOrderInfo(order.idorders))
+        ordersIds.map(async order => printOrderInfo(order.order_id))
       );
     };
     req.ordersList = await detailedOrders();
@@ -154,7 +154,7 @@ async function updateOrderStatus(req, res, next) {
         const query = updateQuery(
           "orders",
           `status = '${status}'`,
-          `idorders = ${id}`
+          `order_id = ${id}`
         );
         await sequelize.query(query, { raw: true });
         req.updatedOrder = await findOrderbyId(id);
@@ -184,10 +184,10 @@ function validateStatus(submittedStatus) {
 
 async function findOrderbyId(orderId) {
   const existingOrder = async () => {
-    const query = selectQuery("orders", "*", `idorders = ${orderId}`);
+    const query = selectQuery("orders", "*", `order_id = ${orderId}`);
     const [dbOrder] = await sequelize.query(query, { raw: true });
     const foundOrder = await dbOrder.find(
-      element => element.idorders === orderId
+      element => element.order_id === orderId
     );
     return foundOrder;
   };
@@ -200,7 +200,7 @@ async function deleteOrder(req, res, next) {
   try {
     const orderToDelete = await findOrderbyId(id);
     if (orderToDelete) {
-      const query = deleteQuery("orders", `idorders = ${id}`);
+      const query = deleteQuery("orders", `order_id = ${id}`);
       await sequelize.query(query, { raw: true });
       req.isDeleted = true;
       next();
