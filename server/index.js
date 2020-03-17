@@ -15,7 +15,7 @@ const {
   listOrders,
   updateOrderStatus,
   deleteOrder
-} = require("./utils");
+} = require("../utils");
 
 //SET UP SERVER
 server.listen(3000, () => {
