@@ -50,12 +50,12 @@ async function newProduct(product_name, product_photo, product_price) {
 
 async function findProductById(id) {
   const existingProduct = async () => {
-    const query = selectQuery("products", "*", `idproducts = ${id}`);
+    const query = selectQuery("products", "*", `product_id = ${id}`);
 
     const [dbProduct] = await sequelize.query(query, { raw: true });
 
     const foundProduct = await dbProduct.find(
-      element => element.idproducts === id
+      element => element.product_id === id
     );
     return foundProduct;
   };
@@ -86,7 +86,7 @@ async function updateProductInDb(id, product) {
     const query = updateQuery(
       "products",
       `product_name = '${product_name}', product_photo = '${product_photo}', product_price = '${product_price}'`,
-      `idProducts = ${id}`
+      `product_id = ${id}`
     );
     await sequelize.query(query, { raw: true });
     const dbProduct = await findProductById(id);
@@ -122,7 +122,7 @@ async function deleteProduct(req, res, next) {
     const productToDelete = await findProductById(id);
     if (productToDelete) {
       const isDeleted = async () => {
-        const query = deleteQuery("products", `idproducts = ${id}`);
+        const query = deleteQuery("products", `product_id = ${id}`);
         await sequelize.query(query, { raw: true });
         return true;
       };

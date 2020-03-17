@@ -46,7 +46,7 @@ async function registerUser(req, res, next) {
     address,
     email,
     phone_number,
-    isAdmin
+    is_admin
   } = req.body;
   if (
     username &&
@@ -60,7 +60,7 @@ async function registerUser(req, res, next) {
     try {
       const query = insertQuery(
         "users",
-        "username, password, firstname, lastname, address, email, phone_number, isAdmin",
+        "username, password, firstname, lastname, address, email, phone_number, is_admin",
         [
           username,
           password,
@@ -69,7 +69,7 @@ async function registerUser(req, res, next) {
           address,
           email,
           phone_number,
-          isAdmin
+          is_admin
         ]
       );
       [userId] = await sequelize.query(query, { raw: true });
@@ -87,7 +87,7 @@ async function findUserbyUsername(username) {
   const existingUser = async () => {
     const query = selectQuery(
       "users",
-      "idusers, username, password, isAdmin",
+      "user_id, username, password, is_admin",
       `username = '${username}'`
     );
     const [dbUser] = await sequelize.query(query, { raw: true });
