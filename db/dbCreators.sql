@@ -8,7 +8,7 @@ CREATE TABLE `delilah_resto`.`users` (
   `lastname` varchar(45) NOT NULL,
   `address` varchar(45) NOT NULL,
   `email` varchar(45) NOT NULL,
-  `phone_number` int NOT NULL,
+  `phone_number` varchar(45) NOT NULL,
   `is_admin` tinyint unsigned NOT NULL,
   PRIMARY KEY (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
@@ -18,7 +18,7 @@ CREATE TABLE `delilah_resto`.`products` (
   `product_id` int unsigned NOT NULL AUTO_INCREMENT,
   `product_name` varchar(45) NOT NULL,
   `product_price` int unsigned NOT NULL,
-  `product_photo` varchar(45) NOT NULL,
+  `product_photo` varchar(500) NOT NULL,
   PRIMARY KEY (`product_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 

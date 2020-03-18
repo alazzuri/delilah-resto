@@ -1,27 +1,15 @@
-const {
-  createDbQuery,
-  usersTableQuery,
-  productsTableQuery,
-  ordersTableQuery,
-  ordersRelationshipTableQuery
-} = require("../queries");
-
-const { sequelize } = require("../sequelize");
 const { dbName } = require("../sequelize/config");
-
-const createDb = async (...queries) => {
-  for (let i = 0; i < queries.length; i++) {
-    await sequelize.query(queries[i](), { raw: true });
-  }
-};
+const { createDb } = require("./db-creation");
+const { usersUpload } = require("./users-upload");
+const { productsUpload } = require("./products-upload");
 
 (async () => {
-  await createDb(
-    createDbQuery,
-    usersTableQuery,
-    productsTableQuery,
-    ordersTableQuery,
-    ordersRelationshipTableQuery
-  );
-  console.log(`Database ${dbName} created`);
+  try {
+    await createDb();
+    await usersUpload();
+    await productsUpload();
+    console.log(`Database ${dbName} created.\nSetup completed. `);
+  } catch (err) {
+    throw new Error(err);
+  }
 })();
