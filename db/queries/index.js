@@ -27,7 +27,7 @@ function productsTableQuery() {
         product_id int unsigned NOT NULL AUTO_INCREMENT,
         product_name varchar(45) NOT NULL,
         product_price int unsigned NOT NULL,
-        product_photo varchar(45) NOT NULL,
+        product_photo varchar(500) NOT NULL,
         PRIMARY KEY (product_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci`;
 }
