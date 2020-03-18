@@ -1,7 +1,7 @@
 const fs = require("fs");
 const csv = require("csv-parser");
-const { insertQuery } = require("../queries");
-const { sequelize } = require("../sequelize");
+const { insertQuery } = require("../../queries");
+const { sequelize } = require("../../sequelize");
 let userData = fs.createReadStream("./users.csv");
 let usersUpload = userData.pipe(csv()).on("data", async data => {
   try {
@@ -29,7 +29,7 @@ let usersUpload = userData.pipe(csv()).on("data", async data => {
         is_admin
       ]
     );
-    [userId] = await sequelize.query(query, { raw: true });
+    await sequelize.query(query, { raw: true });
   } catch (err) {
     throw new Error(err);
   }
