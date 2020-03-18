@@ -15,7 +15,7 @@ function usersTableQuery() {
         lastname varchar(45) NOT NULL,
         address varchar(45) NOT NULL,
         email varchar(45) NOT NULL,
-        phone_number int NOT NULL,
+        phone_number varchar(45) NOT NULL,
         is_admin tinyint unsigned NOT NULL,
         PRIMARY KEY (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci`;
