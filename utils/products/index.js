@@ -22,11 +22,15 @@ async function productsList() {
 }
 
 async function createProduct(req, res, next) {
-  const { name, photoUrls, price } = req.body;
-  if (name && photoUrls && price >= 0) {
+  const { product_name, product_photo, product_price } = req.body;
+  if (product_name && product_photo && product_price >= 0) {
     try {
-      const createdProduct = await newProduct(name, photoUrls, price);
-      req.addedProduct = createdProduct;
+      const createdProduct = await newProduct(
+        product_name,
+        product_photo,
+        product_price
+      );
+      req.addedProduct = { productId: await createdProduct() };
       next();
     } catch (err) {
       next(new Error(err));

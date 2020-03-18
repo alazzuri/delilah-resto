@@ -10,38 +10,36 @@ const { findUserbyUsername } = require("../users");
 const { findProductById } = require("../products");
 
 async function createOrder(req, res, next) {
-  const { user, products, payment_method } = req.body;
-  if (user && products && payment_method) {
-    try {
-      const addedOrder = await addOrderInDb(user, products, payment_method);
-      req.createdOrder = addedOrder;
-      next();
-    } catch (err) {
-      next(new Error(err));
-    }
-  } else {
-    res.status(405).json("Missing Arguments");
+  try {
+    req.createdOrder = await addOrderInDb(req, res);
+    next();
+  } catch (err) {
+    next(new Error(err));
   }
 }
 
-async function addOrderInDb(user, products, payment_method) {
-  const userData = await findUserbyUsername(user);
-  const userId = userData.user_id;
-  const orderTime = new Date().toLocaleTimeString(); /// ver como se pasa a formato base de datos
-  const [orderDesc, totalPrice] = await obtainOrderDescAndPrice(products);
-  const addedOrder = await createOrderRegistry(
-    orderTime,
-    orderDesc,
-    totalPrice,
-    payment_method,
-    userId
-  );
-  addedRelationship = await createOrderRelationship(addedOrder, products);
-  if (addedRelationship) {
-    const orderInfo = await printOrderInfo(addedOrder);
-    return orderInfo;
+async function addOrderInDb(req, res) {
+  const { username, products, payment_method } = req.body;
+  if (username && products && payment_method) {
+    const userData = await findUserbyUsername(username);
+    if (userData) {
+      const userId = userData.user_id;
+      const orderTime = new Date().toLocaleTimeString(); /// ver como se pasa a formato base de datos
+      const [orderDesc, totalPrice] = await obtainOrderDescAndPrice(products);
+      const addedOrder = await createOrderRegistry(
+        orderTime,
+        orderDesc,
+        totalPrice,
+        payment_method,
+        userId
+      );
+      await createOrderRelationship(addedOrder, products);
+      return await printOrderInfo(addedOrder);
+    } else {
+      res.status(400).json("User not found");
+    }
   } else {
-    console.error(err);
+    res.status(405).json("Missing Arguments");
   }
 }
 
@@ -103,7 +101,7 @@ async function printOrderInfo(orderId) {
   const ordersQuery = joinQuery(
     "orders",
     "orders.*, users.username, users.firstname, users.lastname,users.address, users.email, users.phone_number",
-    ["users ON orders.id_user = users.user_id"],
+    ["users ON orders.user_id = users.user_id"],
     `order_id = ${orderId}`
   );
 
@@ -153,7 +151,7 @@ async function updateOrderStatus(req, res, next) {
       if (orderToUpdate) {
         const query = updateQuery(
           "orders",
-          `status = '${status}'`,
+          `order_status = '${status}'`,
           `order_id = ${id}`
         );
         await sequelize.query(query, { raw: true });
