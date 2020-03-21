@@ -142,14 +142,14 @@ async function deleteProduct(req, res, next) {
     if (productToDelete) {
       const existingOrder = await existingOrderWithProduct(id);
       if (!existingOrder) {
-      const isDeleted = async () => {
-        const query = deleteQuery("products", `product_id = ${id}`);
-        await sequelize.query(query, { raw: true });
-        return true;
-      };
-      req.isDeleted = await isDeleted();
-      next();
-    } else {
+        const isDeleted = async () => {
+          const query = deleteQuery("products", `product_id = ${id}`);
+          await sequelize.query(query, { raw: true });
+          return true;
+        };
+        req.isDeleted = await isDeleted();
+        next();
+      } else {
         res
           .status(409)
           .json(
