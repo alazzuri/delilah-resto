@@ -146,6 +146,8 @@ paths:
           description: "Forbidden"
         404:
           description: "Product not found"
+        409:
+          description: "Product linked to an active order. Please resolve conflict and try again"
       security:
         - store_auth:
             - "write:products"
