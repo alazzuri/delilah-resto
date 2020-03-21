@@ -1,22 +1,19 @@
+// DATABASE
 const {
-  sequelize,
-  insertQuery,
-  selectQuery,
-  updateQuery,
   deleteQuery,
-  joinQuery
+  insertQuery,
+  joinQuery,
+  selectQuery,
+  sequelize,
+  updateQuery
 } = require("../../db");
-const { findUserbyUsername } = require("../users");
-const { findProductById } = require("../products");
 
-async function createOrder(req, res, next) {
-  try {
-    req.createdOrder = await addOrderInDb(req, res);
-    next();
-  } catch (err) {
-    next(new Error(err));
-  }
-}
+// UTILS
+const {
+  findProductById,
+  findProductPrice,
+  findUserbyUsername
+} = require("../../utils");
 
 async function addOrderInDb(req, res) {
   const { username, products, payment_method } = req.body;
@@ -43,29 +40,29 @@ async function addOrderInDb(req, res) {
   }
 }
 
-async function obtainOrderDescAndPrice(products) {
-  let orderDescription = "";
-  let subtotal = 0;
-  for (let i = 0; i < products.length; i++) {
-    orderDescription = orderDescription + (await printDescName(products[i]));
-    subtotal = +subtotal + +(await findProductPrice(products[i]));
+async function completeDesc(orderInfo) {
+  const order = orderInfo[0];
+  const productsQuery = joinQuery(
+    "orders_products",
+    "orders_products.product_quantity, products.*",
+    [`products ON orders_products.product_id = products.product_id`],
+    `order_id = ${order.order_id}`
+  );
+  const [productsInfo] = await sequelize.query(productsQuery, {
+    raw: true
+  });
+  order.products = await productsInfo;
+  return order;
+}
+
+async function createOrder(req, res, next) {
+  try {
+    req.createdOrder = await addOrderInDb(req, res);
+    next();
+  } catch (err) {
+    next(new Error(err));
   }
-  return [orderDescription, subtotal];
 }
-
-async function printDescName(product) {
-  const { productId, quantity } = product;
-  const productName = (await findProductById(productId)).product_name;
-  const productDesc = `${quantity}x${productName.slice(0, 5)} `;
-  return productDesc;
-}
-
-async function findProductPrice(product) {
-  const { productId, quantity } = product;
-  const productPrice = (await findProductById(productId)).product_price;
-  const subtotal = `${+productPrice * +quantity}`;
-  return subtotal;
-} /// llevar a productos
 
 async function createOrderRegistry(
   orderTime,
@@ -97,32 +94,34 @@ async function createOrderRelationship(orderId, products) {
   return true;
 }
 
-async function printOrderInfo(orderId) {
-  const ordersQuery = joinQuery(
-    "orders",
-    "orders.*, users.username, users.firstname, users.lastname,users.address, users.email, users.phone_number",
-    ["users ON orders.user_id = users.user_id"],
-    `order_id = ${orderId}`
-  );
+async function deleteOrder(req, res, next) {
+  const id = +req.params.orderId;
+  try {
+    const orderToDelete = await findOrderbyId(id);
+    if (orderToDelete) {
+      const query = deleteQuery("orders", `order_id = ${id}`);
+      await sequelize.query(query, { raw: true });
+      req.isDeleted = true;
+      next();
+    } else {
+      res.status(404).json("Order not found");
+    }
+  } catch (err) {
+    next(new Error(err));
+  }
+}
 
-  const [orderInfo] = await sequelize.query(ordersQuery, { raw: true });
-
-  const completeDesc = async () => {
-    const order = orderInfo[0];
-    const productsQuery = joinQuery(
-      "orders_products",
-      "orders_products.product_quantity, products.*",
-      [`products ON orders_products.product_id = products.product_id`],
-      `order_id = ${order.order_id}`
+async function findOrderbyId(orderId) {
+  const existingOrder = async () => {
+    const query = selectQuery("orders", "*", `order_id = ${orderId}`);
+    const [dbOrder] = await sequelize.query(query, { raw: true });
+    const foundOrder = await dbOrder.find(
+      element => element.order_id === orderId
     );
-    const [productsInfo] = await sequelize.query(productsQuery, {
-      raw: true
-    });
-    order.products = await productsInfo;
-    return order;
+    return foundOrder;
   };
 
-  return completeDesc();
+  return existingOrder();
 }
 
 async function listOrders(req, res, next) {
@@ -139,6 +138,36 @@ async function listOrders(req, res, next) {
   } catch (err) {
     next(new Error(err));
   }
+}
+
+async function obtainOrderDescAndPrice(products) {
+  let orderDescription = "";
+  let subtotal = 0;
+  for (let i = 0; i < products.length; i++) {
+    orderDescription = orderDescription + (await printDescName(products[i]));
+    subtotal = +subtotal + +(await findProductPrice(products[i]));
+  }
+  return [orderDescription, subtotal];
+}
+
+async function printDescName(product) {
+  const { productId, quantity } = product;
+  const productName = (await findProductById(productId)).product_name;
+  const productDesc = `${quantity}x${productName.slice(0, 5)} `;
+  return productDesc;
+}
+
+async function printOrderInfo(orderId) {
+  const ordersQuery = joinQuery(
+    "orders",
+    "orders.*, users.username, users.firstname, users.lastname,users.address, users.email, users.phone_number",
+    ["users ON orders.user_id = users.user_id"],
+    `order_id = ${orderId}`
+  );
+
+  const [orderInfo] = await sequelize.query(ordersQuery, { raw: true });
+
+  return completeDesc(orderInfo);
 }
 
 async function updateOrderStatus(req, res, next) {
@@ -180,34 +209,10 @@ function validateStatus(submittedStatus) {
   return existingStatus;
 }
 
-async function findOrderbyId(orderId) {
-  const existingOrder = async () => {
-    const query = selectQuery("orders", "*", `order_id = ${orderId}`);
-    const [dbOrder] = await sequelize.query(query, { raw: true });
-    const foundOrder = await dbOrder.find(
-      element => element.order_id === orderId
-    );
-    return foundOrder;
-  };
-
-  return existingOrder();
-}
-
-async function deleteOrder(req, res, next) {
-  const id = +req.params.orderId;
-  try {
-    const orderToDelete = await findOrderbyId(id);
-    if (orderToDelete) {
-      const query = deleteQuery("orders", `order_id = ${id}`);
-      await sequelize.query(query, { raw: true });
-      req.isDeleted = true;
-      next();
-    } else {
-      res.status(404).json("Order not found");
-    }
-  } catch (err) {
-    next(new Error(err));
-  }
-}
-
-module.exports = { createOrder, listOrders, updateOrderStatus, deleteOrder };
+module.exports = {
+  completeDesc,
+  createOrder,
+  deleteOrder,
+  listOrders,
+  updateOrderStatus
+};
