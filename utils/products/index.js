@@ -1,71 +1,11 @@
+//DATABASE
 const {
-  sequelize,
+  deleteQuery,
   insertQuery,
   selectQuery,
-  updateQuery,
-  deleteQuery
+  sequelize,
+  updateQuery
 } = require("../../db");
-
-async function getProducts(req, res, next) {
-  try {
-    req.productList = await productsList();
-    next();
-  } catch (err) {
-    next(new Error(err));
-  }
-}
-
-async function productsList() {
-  const query = selectQuery("products");
-  const [dbProducts] = await sequelize.query(query, { raw: true });
-  return dbProducts;
-}
-
-async function createProduct(req, res, next) {
-  const { product_name, product_photo, product_price } = req.body;
-  if (product_name && product_photo && product_price >= 0) {
-    try {
-      const createdProduct = await newProduct(
-        product_name,
-        product_photo,
-        product_price
-      );
-      req.addedProduct = { productId: await createdProduct() };
-      next();
-    } catch (err) {
-      next(new Error(err));
-    }
-  } else {
-    res.status(400).json("Missing Arguments");
-  }
-}
-
-async function newProduct(product_name, product_photo, product_price) {
-  return async () => {
-    const query = insertQuery(
-      "products",
-      "product_name, product_photo, product_price",
-      [product_name, product_photo, product_price]
-    );
-    const [addedProduct] = await sequelize.query(query, { raw: true });
-    return addedProduct;
-  };
-}
-
-async function findProductById(id) {
-  const existingProduct = async () => {
-    const query = selectQuery("products", "*", `product_id = ${id}`);
-
-    const [dbProduct] = await sequelize.query(query, { raw: true });
-
-    const foundProduct = await dbProduct.find(
-      element => element.product_id === id
-    );
-    return foundProduct;
-  };
-
-  return await existingProduct();
-}
 
 async function applyProductChanges(productToUpdate, updatedProperties) {
   const properties = Object.keys(updatedProperties).filter(
@@ -84,54 +24,22 @@ async function applyProductChanges(productToUpdate, updatedProperties) {
   return updatedProduct;
 }
 
-async function updateProductInDb(id, product) {
-  const { product_name, product_photo, product_price } = product;
-  updatedProduct = async () => {
-    const query = updateQuery(
-      "products",
-      `product_name = '${product_name}', product_photo = '${product_photo}', product_price = '${product_price}'`,
-      `product_id = ${id}`
-    );
-    await sequelize.query(query, { raw: true });
-    const dbProduct = await findProductById(id);
-    return dbProduct;
-  };
-  return await updatedProduct();
-}
-
-async function updateProduct(req, res, next) {
-  const id = +req.params.productId;
-  const updatedProperties = req.body;
-  try {
-    const productToUpdate = await findProductById(id);
-    if (productToUpdate) {
-      const updatedProduct = await applyProductChanges(
-        productToUpdate,
-        updatedProperties
+async function createProduct(req, res, next) {
+  const { product_name, product_photo, product_price } = req.body;
+  if (product_name && product_photo && product_price >= 0) {
+    try {
+      const createdProduct = await newProduct(
+        product_name,
+        product_photo,
+        product_price
       );
-      const savedProduct = await updateProductInDb(id, updatedProduct);
-      req.updatedProduct = savedProduct;
+      req.addedProduct = { productId: await createdProduct() };
       next();
-    } else {
-      res.status(404).json("Product not found");
+    } catch (err) {
+      next(new Error(err));
     }
-  } catch (err) {
-    next(new Error(err));
-  }
-}
-
-async function existingOrderWithProduct(productId) {
-  const query = selectQuery(
-    "orders_products",
-    "*",
-    `product_id = ${productId}`
-  );
-  const [results] = await sequelize.query(query, { raw: true });
-
-  if (results.length) {
-    return true;
   } else {
-    return false;
+    res.status(400).json("Missing Arguments");
   }
 }
 
@@ -164,13 +72,110 @@ async function deleteProduct(req, res, next) {
   }
 }
 
+async function existingOrderWithProduct(productId) {
+  const query = selectQuery(
+    "orders_products",
+    "*",
+    `product_id = ${productId}`
+  );
+  const [results] = await sequelize.query(query, { raw: true });
+  if (results.length) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+async function findProductById(id) {
+  const existingProduct = async () => {
+    const query = selectQuery("products", "*", `product_id = ${id}`);
+    const [dbProduct] = await sequelize.query(query, { raw: true });
+    const foundProduct = await dbProduct.find(
+      element => element.product_id === id
+    );
+    return foundProduct;
+  };
+  return await existingProduct();
+}
+
+async function findProductPrice(product) {
+  const { productId, quantity } = product;
+  const productPrice = (await findProductById(productId)).product_price;
+  const subtotal = `${+productPrice * +quantity}`;
+  return subtotal;
+}
+
+async function getProducts(req, res, next) {
+  try {
+    req.productList = await productsList();
+    next();
+  } catch (err) {
+    next(new Error(err));
+  }
+}
+
+async function newProduct(product_name, product_photo, product_price) {
+  return async () => {
+    const query = insertQuery(
+      "products",
+      "product_name, product_photo, product_price",
+      [product_name, product_photo, product_price]
+    );
+    const [addedProduct] = await sequelize.query(query, { raw: true });
+    return addedProduct;
+  };
+}
+
+async function productsList() {
+  const query = selectQuery("products");
+  const [dbProducts] = await sequelize.query(query, { raw: true });
+  return dbProducts;
+}
+
+async function updateProduct(req, res, next) {
+  const id = +req.params.productId;
+  const updatedProperties = req.body;
+  try {
+    const productToUpdate = await findProductById(id);
+    if (productToUpdate) {
+      const updatedProduct = await applyProductChanges(
+        productToUpdate,
+        updatedProperties
+      );
+      const savedProduct = await updateProductInDb(id, updatedProduct);
+      req.updatedProduct = savedProduct;
+      next();
+    } else {
+      res.status(404).json("Product not found");
+    }
+  } catch (err) {
+    next(new Error(err));
+  }
+}
+
+async function updateProductInDb(id, product) {
+  const { product_name, product_photo, product_price } = product;
+  updatedProduct = async () => {
+    const query = updateQuery(
+      "products",
+      `product_name = '${product_name}', product_photo = '${product_photo}', product_price = '${product_price}'`,
+      `product_id = ${id}`
+    );
+    await sequelize.query(query, { raw: true });
+    const dbProduct = await findProductById(id);
+    return dbProduct;
+  };
+  return await updatedProduct();
+}
+
 module.exports = {
-  getProducts,
-  createProduct,
-  newProduct,
-  findProductById,
   applyProductChanges,
-  updateProductInDb,
+  createProduct,
+  deleteProduct,
+  findProductById,
+  findProductPrice,
+  getProducts,
+  newProduct,
   updateProduct,
-  deleteProduct
+  updateProductInDb
 };
