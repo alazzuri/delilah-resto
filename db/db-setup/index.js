@@ -1,7 +1,8 @@
-const { dbName } = require("../sequelize/config");
+// DATABASE
 const { createDb } = require("./db-creation");
-const { usersUpload } = require("./users-upload");
+const { dbName } = require("../sequelize");
 const { productsUpload } = require("./products-upload");
+const { usersUpload } = require("./users-upload");
 
 (async () => {
   try {

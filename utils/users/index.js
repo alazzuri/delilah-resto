@@ -11,7 +11,6 @@ async function findUserByName(firstname, lastname) {
   const existingUser = await dbUser.find(
     element => element.firstname === firstname && element.lastname === lastname
   );
-
   return existingUser ? true : false;
 }
 

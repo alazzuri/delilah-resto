@@ -1,4 +1,5 @@
-const { dbName } = require("../sequelize/config");
+// DATABASE
+const { dbName } = require("../sequelize");
 
 // SCHEMA QUERY
 function createDbQuery() {
@@ -82,9 +83,7 @@ function selectQuery(table, columns = "*", conditions = null) {
 //UPDATE QUERY
 function updateQuery(table, changes, conditions) {
   const query =
-    `UPDATE ${dbName}.${table} SET ${changes}` +
-    ` ${conditions ? `WHERE ${conditions}` : ""}`; // PENSAR SI CONVIENE DEJAR ESTA VALIDACION O QUE SI O SI HAYA PARAMETRO
-
+    `UPDATE ${dbName}.${table} SET ${changes}` + `WHERE ${conditions}`;
   return query;
 }
 
@@ -100,7 +99,6 @@ function joinQuery(mainTable, columns, joiners, conditions) {
     .map(element => `JOIN ${dbName}.${element} `)
     .toString()
     .replace(/,/g, "");
-
   const query =
     `SELECT ${columns} FROM ${dbName}.${mainTable}` +
     ` ${fullJoiners}` +
@@ -110,13 +108,13 @@ function joinQuery(mainTable, columns, joiners, conditions) {
 
 module.exports = {
   createDbQuery,
-  usersTableQuery,
-  productsTableQuery,
-  ordersTableQuery,
-  ordersRelationshipTableQuery,
+  deleteQuery,
   insertQuery,
+  joinQuery,
+  ordersRelationshipTableQuery,
+  ordersTableQuery,
+  productsTableQuery,
   selectQuery,
   updateQuery,
-  deleteQuery,
-  joinQuery
+  usersTableQuery
 };

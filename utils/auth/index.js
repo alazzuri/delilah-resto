@@ -2,7 +2,7 @@
 const { JWT, signature } = require("../../auth");
 
 // UTILS
-const { findUserbyUsername } = require("../users");
+const { findUserByUsername } = require("../users");
 
 function validateAuth(req, res, next) {
   const token = req.headers.authorization;
@@ -19,7 +19,7 @@ function validateAuth(req, res, next) {
 async function validateCredentials(req, res, next) {
   const { username, password } = req.body;
   try {
-    const registeredUser = await findUserbyUsername(username);
+    const registeredUser = await findUserByUsername(username);
     if (registeredUser) {
       const { password: dbPassword, is_admin } = registeredUser;
       if (password === dbPassword) {

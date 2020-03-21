@@ -1,47 +1,51 @@
 const {
   findUserByName,
-  findUserbyUsername,
+  findUserByUsername,
   registerUser,
   validateExistingUser
 } = require("./users");
 
-const { validateCredentials, validateAuth } = require("./auth");
+const { validateAuth, validateCredentials } = require("./auth");
 
 const {
-  getProducts,
-  createProduct,
-  newProduct,
-  findProductById,
   applyProductChanges,
-  updateProductInDb,
+  createProduct,
+  deleteProduct,
+  findProductById,
+  findProductPrice,
+  getProducts,
+  newProduct,
   updateProduct,
-  deleteProduct
+  updateProductInDb
 } = require("./products");
 
 const {
+  completeDesc,
   createOrder,
+  deleteOrder,
   listOrders,
-  updateOrderStatus,
-  deleteOrder
+  updateOrderStatus
 } = require("./orders");
 
 module.exports = {
-  findUserByName,
-  findUserbyUsername,
-  registerUser,
-  validateExistingUser,
-  validateCredentials,
-  validateAuth,
-  getProducts,
-  createProduct,
-  newProduct,
-  findProductById,
   applyProductChanges,
-  updateProductInDb,
-  updateProduct,
-  deleteProduct,
   createOrder,
+  createProduct,
+  completeDesc,
+  deleteProduct,
+  deleteOrder,
+  findProductById,
+  findProductPrice,
+  findUserByName,
+  findUserByUsername,
+  getProducts,
   listOrders,
+  newProduct,
+  registerUser,
   updateOrderStatus,
-  deleteOrder
+  updateProduct,
+  updateProductInDb,
+  validateAuth,
+  validateCredentials,
+  validateExistingUser
 };
