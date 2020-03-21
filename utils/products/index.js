@@ -120,11 +120,28 @@ async function updateProduct(req, res, next) {
   }
 }
 
+async function existingOrderWithProduct(productId) {
+  const query = selectQuery(
+    "orders_products",
+    "*",
+    `product_id = ${productId}`
+  );
+  const [results] = await sequelize.query(query, { raw: true });
+
+  if (results.length) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 async function deleteProduct(req, res, next) {
   const id = +req.params.productId;
   try {
     const productToDelete = await findProductById(id);
     if (productToDelete) {
+      const existingOrder = await existingOrderWithProduct(id);
+      if (!existingOrder) {
       const isDeleted = async () => {
         const query = deleteQuery("products", `product_id = ${id}`);
         await sequelize.query(query, { raw: true });
@@ -132,6 +149,13 @@ async function deleteProduct(req, res, next) {
       };
       req.isDeleted = await isDeleted();
       next();
+    } else {
+        res
+          .status(409)
+          .json(
+            "Product linked to an active order. Please resolve conflict and try again"
+          );
+      }
     } else {
       res.status(404).json("Product not found");
     }
