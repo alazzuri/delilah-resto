@@ -12,16 +12,16 @@ const {
 const {
   findProductById,
   findProductPrice,
-  findUserbyUsername
+  findUserByUsername
 } = require("../../utils");
 
 async function addOrderInDb(req, res) {
   const { username, products, payment_method } = req.body;
   if (username && products && payment_method) {
-    const userData = await findUserbyUsername(username);
+    const userData = await findUserByUsername(username);
     if (userData) {
       const userId = userData.user_id;
-      const orderTime = new Date().toLocaleTimeString(); /// ver como se pasa a formato base de datos
+      const orderTime = new Date().toLocaleTimeString();
       const [orderDesc, totalPrice] = await obtainOrderDescAndPrice(products);
       const addedOrder = await createOrderRegistry(
         orderTime,
@@ -76,7 +76,6 @@ async function createOrderRegistry(
     "order_time, order_description, order_amount, payment_method, user_id",
     [orderTime, orderDescription, totalPrice, paymentMethod, user]
   );
-
   const [addedRegistry] = await sequelize.query(query, { raw: true });
   return addedRegistry;
 }
@@ -112,16 +111,12 @@ async function deleteOrder(req, res, next) {
 }
 
 async function findOrderbyId(orderId) {
-  const existingOrder = async () => {
-    const query = selectQuery("orders", "*", `order_id = ${orderId}`);
-    const [dbOrder] = await sequelize.query(query, { raw: true });
-    const foundOrder = await dbOrder.find(
-      element => element.order_id === orderId
-    );
-    return foundOrder;
-  };
-
-  return existingOrder();
+  const query = selectQuery("orders", "*", `order_id = ${orderId}`);
+  const [dbOrder] = await sequelize.query(query, { raw: true });
+  const foundOrder = await dbOrder.find(
+    element => element.order_id === orderId
+  );
+  return foundOrder;
 }
 
 async function listOrders(req, res, next) {
@@ -164,15 +159,13 @@ async function printOrderInfo(orderId) {
     ["users ON orders.user_id = users.user_id"],
     `order_id = ${orderId}`
   );
-
   const [orderInfo] = await sequelize.query(ordersQuery, { raw: true });
-
   return completeDesc(orderInfo);
 }
 
 async function updateOrderStatus(req, res, next) {
   const id = +req.params.orderId;
-  const { status } = req.body; // unificar nombres de constantes
+  const { status } = req.body;
   const validStatus = validateStatus(status);
   if (validStatus) {
     try {
@@ -193,7 +186,7 @@ async function updateOrderStatus(req, res, next) {
       next(new Error(err));
     }
   } else {
-    res.status(405).json("Invalid status suplied"); // ver el status code y cambiar en la DOC de la API
+    res.status(405).json("Invalid status suplied");
   }
 }
 
