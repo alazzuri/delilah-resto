@@ -1,5 +1,20 @@
+//AUTH
 const { JWT, signature } = require("../../auth");
+
+// UTILS
 const { findUserbyUsername } = require("../users");
+
+function validateAuth(req, res, next) {
+  const token = req.headers.authorization;
+  const validatedUser = JWT.verify(token, signature);
+  const { is_admin } = validatedUser;
+  if (is_admin) {
+    req.is_admin = is_admin;
+    next();
+  } else {
+    res.status(403).json("Forbidden");
+  }
+}
 
 async function validateCredentials(req, res, next) {
   const { username, password } = req.body;
@@ -22,16 +37,4 @@ async function validateCredentials(req, res, next) {
   }
 }
 
-function validateAuth(req, res, next) {
-  const token = req.headers.authorization;
-  const validatedUser = JWT.verify(token, signature);
-  const { is_admin } = validatedUser;
-  if (is_admin) {
-    req.is_admin = is_admin;
-    next();
-  } else {
-    res.status(403).json("Forbidden");
-  }
-}
-
-module.exports = { validateCredentials, validateAuth };
+module.exports = { validateAuth, validateCredentials };
