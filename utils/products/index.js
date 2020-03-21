@@ -87,15 +87,12 @@ async function existingOrderWithProduct(productId) {
 }
 
 async function findProductById(id) {
-  const existingProduct = async () => {
-    const query = selectQuery("products", "*", `product_id = ${id}`);
-    const [dbProduct] = await sequelize.query(query, { raw: true });
-    const foundProduct = await dbProduct.find(
-      element => element.product_id === id
-    );
-    return foundProduct;
-  };
-  return await existingProduct();
+  const query = selectQuery("products", "*", `product_id = ${id}`);
+  const [dbProduct] = await sequelize.query(query, { raw: true });
+  const foundProduct = await dbProduct.find(
+    element => element.product_id === id
+  );
+  return foundProduct;
 }
 
 async function findProductPrice(product) {
@@ -115,15 +112,13 @@ async function getProducts(req, res, next) {
 }
 
 async function newProduct(product_name, product_photo, product_price) {
-  return async () => {
-    const query = insertQuery(
-      "products",
-      "product_name, product_photo, product_price",
-      [product_name, product_photo, product_price]
-    );
-    const [addedProduct] = await sequelize.query(query, { raw: true });
-    return addedProduct;
-  };
+  const query = insertQuery(
+    "products",
+    "product_name, product_photo, product_price",
+    [product_name, product_photo, product_price]
+  );
+  const [addedProduct] = await sequelize.query(query, { raw: true });
+  return addedProduct;
 }
 
 async function productsList() {
@@ -155,17 +150,14 @@ async function updateProduct(req, res, next) {
 
 async function updateProductInDb(id, product) {
   const { product_name, product_photo, product_price } = product;
-  updatedProduct = async () => {
-    const query = updateQuery(
-      "products",
-      `product_name = '${product_name}', product_photo = '${product_photo}', product_price = '${product_price}'`,
-      `product_id = ${id}`
-    );
-    await sequelize.query(query, { raw: true });
-    const dbProduct = await findProductById(id);
-    return dbProduct;
-  };
-  return await updatedProduct();
+  const query = updateQuery(
+    "products",
+    `product_name = '${product_name}', product_photo = '${product_photo}', product_price = '${product_price}'`,
+    `product_id = ${id}`
+  );
+  await sequelize.query(query, { raw: true });
+  const dbProduct = await findProductById(id);
+  return dbProduct;
 }
 
 module.exports = {
