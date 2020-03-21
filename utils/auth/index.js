@@ -7,12 +7,19 @@ const { findUserByUsername } = require("../users");
 function validateAuth(req, res, next) {
   const token = req.headers.authorization;
   const validatedUser = JWT.verify(token, signature);
-  const { is_admin } = validatedUser;
-  if (is_admin) {
-    req.is_admin = is_admin;
-    next();
+  const tokenExpiration = validatedUser.exp * 1000;
+  const currentDateinSeconds = new Date().getTime();
+  const isValid = currentDateinSeconds < tokenExpiration;
+  if (isValid) {
+    const { is_admin } = validatedUser;
+    if (is_admin) {
+      req.is_admin = is_admin;
+      next();
+    } else {
+      res.status(403).json("Forbidden");
+    }
   } else {
-    res.status(403).json("Forbidden");
+    res.status(401).json("Token has expired. Please login again");
   }
 }
 
@@ -23,7 +30,9 @@ async function validateCredentials(req, res, next) {
     if (registeredUser) {
       const { password: dbPassword, is_admin } = registeredUser;
       if (password === dbPassword) {
-        const token = JWT.sign({ username, is_admin }, signature);
+        const token = JWT.sign({ username, is_admin }, signature, {
+          expiresIn: "15m"
+        });
         req.jwtToken = token;
         next();
       } else {

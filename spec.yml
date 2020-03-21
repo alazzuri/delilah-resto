@@ -71,6 +71,8 @@ paths:
                 type: "number"
         400:
           description: "Missing Arguments"
+        401:
+          description: "Token has expired. Please login again"
         403:
           description: "Forbidden"
       security:
@@ -111,6 +113,8 @@ paths:
           description: "Acepted"
           schema:
             $ref: "#/definitions/product_stored"
+        401:
+          description: "Token has expired. Please login again"
         403:
           description: "Forbidden"
         404:
@@ -142,6 +146,8 @@ paths:
       responses:
         200:
           description: "Deleted"
+        401:
+          description: "Token has expired. Please login again"
         403:
           description: "Forbidden"
         404:
@@ -234,6 +240,8 @@ paths:
           description: "Acepted"
           schema:
             $ref: "#/definitions/order_uploaded"
+        401:
+          description: "Token has expired. Please login again"
         403:
           description: "Forbidden"
         404:
@@ -267,6 +275,8 @@ paths:
       responses:
         200:
           description: "Deleted"
+        401:
+          description: "Token has expired. Please login again"
         403:
           description: "Forbidden"
         404:
