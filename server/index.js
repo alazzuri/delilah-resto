@@ -1,7 +1,10 @@
+//LIBS
 const express = require("express");
 const server = express();
 const bodyParser = require("body-parser");
 const CORS = require("cors");
+
+//UTILS
 const {
   registerUser,
   validateExistingUser,
@@ -68,7 +71,6 @@ server.delete(
 );
 
 // ORDERS ENDPOINTS
-
 server.get("/v1/orders/", validateAuth, listOrders, (req, res) => {
   const { ordersList } = req;
   res.status(200).json(ordersList);

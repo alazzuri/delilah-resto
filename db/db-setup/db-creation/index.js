@@ -1,10 +1,11 @@
+// DATABASE
 const { sequelize } = require("../../sequelize");
 const {
   createDbQuery,
-  usersTableQuery,
-  productsTableQuery,
+  ordersRelationshipTableQuery,
   ordersTableQuery,
-  ordersRelationshipTableQuery
+  productsTableQuery,
+  usersTableQuery
 } = require("../../queries");
 
 const creator = async (...queries) => {

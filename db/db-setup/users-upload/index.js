@@ -1,8 +1,10 @@
-const fs = require("fs");
+// LIBS
 const csv = require("csv-parser");
+const fs = require("fs");
 const getStream = require("get-stream");
-const { insertQuery } = require("../../queries");
-const { sequelize } = require("../../sequelize");
+
+//DATABASE
+const { insertQuery, sequelize } = require("../../../db");
 
 const usersData = async () => {
   const parseStream = csv({ delimiter: "," });
@@ -12,7 +14,7 @@ const usersData = async () => {
   return data;
 };
 
-let usersUpload = async data => {
+const usersUpload = async () => {
   const dataToUpload = await usersData();
   for (let i = 0; i < dataToUpload.length; i++) {
     try {

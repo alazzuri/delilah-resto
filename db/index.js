@@ -1,18 +1,18 @@
 const {
-  insertQuery,
-  selectQuery,
-  updateQuery,
   deleteQuery,
-  joinQuery
+  insertQuery,
+  joinQuery,
+  selectQuery,
+  updateQuery
 } = require("./queries");
 
 const { sequelize } = require("./sequelize");
 
 module.exports = {
-  sequelize,
+  deleteQuery,
   insertQuery,
+  joinQuery,
   selectQuery,
   updateQuery,
-  deleteQuery,
-  joinQuery
+  sequelize
 };

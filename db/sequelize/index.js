@@ -1,6 +1,6 @@
-const { dbPath } = require("./config");
+const { dbName, dbPath } = require("./config");
 const Sequelize = require("sequelize");
 
 const sequelize = new Sequelize(dbPath);
 
-module.exports = { sequelize };
+module.exports = { dbName, sequelize };
