@@ -52,7 +52,7 @@ $ yarn install
 
 ```
 $ cd db/db-setup
-$ cd node index.js
+$ node index.js
 ```
 
 This will create the DB's schema, tables and will import example data of users and products. You can **edit** example information by replacing `products.csv` and/or `users.csv` files in `db/datasets`
@@ -62,8 +62,8 @@ You can also create the schemas and the tables mannualy, by using the _queries_ 
 ## Run the API
 
 ```
-$ cd /server
-$ cd node index.js
+$ cd server
+$ node index.js
 ```
 
 ## Dependencies used
