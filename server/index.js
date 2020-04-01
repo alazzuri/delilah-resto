@@ -62,7 +62,7 @@ server.put(
   updateProduct,
   (req, res) => {
     const { updatedProduct } = req;
-    res.status(202).json(updatedProduct); //Actualizar msj en la DOC de la API. Ver todos los status code// ver si se devuelve el producto o msje de exito
+    res.status(202).json(updatedProduct);
   }
 );
 
@@ -72,7 +72,7 @@ server.delete(
   deleteProduct,
   (req, res) => {
     const { isDeleted } = req;
-    isDeleted && res.status(200).json("Deleted"); //Actualizar msj en la DOC de la API. Ver todos los status code
+    isDeleted && res.status(200).json("Deleted");
   }
 );
 
@@ -93,13 +93,13 @@ server.put(
   updateOrderStatus,
   (req, res) => {
     const { updatedOrder } = req;
-    res.status(202).json(updatedOrder); //Actualizar msj en la DOC de la API. Ver todos los status code
+    res.status(202).json(updatedOrder);
   }
 );
 
 server.delete("/v1/orders/:orderId", validateAuth, deleteOrder, (req, res) => {
   const { isDeleted } = req;
-  isDeleted && res.status(200).json("Deleted"); //Actualizar msj en la DOC de la API. Ver todos los status code
+  isDeleted && res.status(200).json("Deleted");
 });
 
 // ERROR DETECTION
