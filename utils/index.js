@@ -1,6 +1,7 @@
 const {
   findUserByName,
   findUserByUsername,
+  getUsers,
   registerUser,
   validateExistingUser
 } = require("./users");
@@ -39,6 +40,7 @@ module.exports = {
   findUserByName,
   findUserByUsername,
   getProducts,
+  getUsers,
   listOrders,
   newProduct,
   registerUser,
