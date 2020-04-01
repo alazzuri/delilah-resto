@@ -6,10 +6,13 @@ const getStream = require("get-stream");
 //DATABASE
 const { insertQuery, sequelize } = require("../../../db");
 
+//DATASETS
+const usersDs = "../datasets/users/users.csv";
+
 const usersData = async () => {
   const parseStream = csv({ delimiter: "," });
   const data = await getStream.array(
-    fs.createReadStream("../datasets/users/users.csv").pipe(parseStream)
+    fs.createReadStream(usersDs).pipe(parseStream)
   );
   return data;
 };
