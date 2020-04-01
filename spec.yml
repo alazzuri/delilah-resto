@@ -286,6 +286,23 @@ paths:
             - "write:products"
 
   /users:
+    get:
+      tags:
+        - "users"
+      summary: "Returns users list"
+      description: "Returns all the users registered in the store"
+      operationId: "getUsers"
+      produces:
+        - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/user_registered"
+
     post:
       tags:
         - "users"
@@ -305,7 +322,7 @@ paths:
         201:
           description: "User created"
           schema:
-            $ref: "#/definitions/user_registered"
+            $ref: "#/definitions/user_id"
         400:
           description: "Missing Arguments"
         409:
@@ -491,6 +508,30 @@ definitions:
         maximum: 1
 
   user_registered:
+    type: "object"
+    properties:
+      user_id:
+        type: "number"
+      username:
+        type: "string"
+      firstname:
+        type: "string"
+      lastname:
+        type: "string"
+      password:
+        type: "string"
+      email:
+        type: "string"
+      address:
+        type: "string"
+      phone_number:
+        type: "string"
+      is_admin:
+        type: "integer"
+        minimum: 0
+        maximum: 1
+
+  user_id:
     type: "object"
     properties:
       userId:

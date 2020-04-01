@@ -90,9 +90,25 @@ async function validateExistingUser(req, res, next) {
   }
 }
 
+async function getUsers(req, res, next) {
+  try {
+    req.usersList = await usersList();
+    next();
+  } catch (err) {
+    next(new Error(err));
+  }
+}
+
+async function usersList() {
+  const query = selectQuery("users");
+  const [dbUsers] = await sequelize.query(query, { raw: true });
+  return dbUsers;
+}
+
 module.exports = {
   findUserByName,
   findUserByUsername,
+  getUsers,
   registerUser,
   validateExistingUser
 };

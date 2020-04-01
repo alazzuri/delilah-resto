@@ -11,6 +11,7 @@ const {
   validateCredentials,
   validateAuth,
   getProducts,
+  getUsers,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -28,6 +29,11 @@ server.listen(3000, () => {
 server.use(bodyParser.json(), CORS());
 
 // USERS ENDPOINTS
+server.get("/v1/users/", validateAuth, getUsers, (req, res) => {
+  const { usersList } = req;
+  res.status(200).json(usersList);
+});
+
 server.post("/v1/users/", validateExistingUser, registerUser, (req, res) => {
   const { createdUserId } = req;
   res.status(201).json({ userId: createdUserId });
