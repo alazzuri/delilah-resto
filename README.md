@@ -44,9 +44,9 @@ $ yarn install
 
 - Open `config.js` file (`db/sequelize/config.js`) where you can edit:
 
-  1. Database's port to which the API should connect
+  1. Database's host and port to which the API should connect
   2. Database's name.
-  3. Database's password to connect.
+  3. Database's user and password to connect.
 
 - Auto set up:
 
