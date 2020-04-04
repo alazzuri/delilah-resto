@@ -66,7 +66,7 @@ function ordersRelationshipTableQuery() {
 
 //INSERT QUERY
 function insertQuery(table, properties, values) {
-  const dataToInsert = values.map(value => `'${value}'`).join(",");
+  const dataToInsert = values.map((value) => `'${value}'`).join(",");
   const query = `INSERT INTO ${dbName}.${table} (${properties}) VALUES (${dataToInsert})`;
   return query;
 }
@@ -96,7 +96,7 @@ function deleteQuery(table, conditions) {
 //JOIN QUERY
 function joinQuery(mainTable, columns, joiners, conditions) {
   const fullJoiners = joiners
-    .map(element => `JOIN ${dbName}.${element} `)
+    .map((element) => `JOIN ${dbName}.${element} `)
     .toString()
     .replace(/,/g, "");
   const query =
@@ -116,5 +116,5 @@ module.exports = {
   productsTableQuery,
   selectQuery,
   updateQuery,
-  usersTableQuery
+  usersTableQuery,
 };

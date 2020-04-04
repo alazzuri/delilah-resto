@@ -5,7 +5,7 @@ const {
   ordersRelationshipTableQuery,
   ordersTableQuery,
   productsTableQuery,
-  usersTableQuery
+  usersTableQuery,
 } = require("../../queries");
 
 const creator = async (...queries) => {

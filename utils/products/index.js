@@ -4,12 +4,12 @@ const {
   insertQuery,
   selectQuery,
   sequelize,
-  updateQuery
+  updateQuery,
 } = require("../../db");
 
 async function applyProductChanges(productToUpdate, updatedProperties) {
   const properties = Object.keys(updatedProperties).filter(
-    property =>
+    (property) =>
       updatedProperties[property] &&
       updatedProperties[property] !== " " &&
       updatedProperties[property] !== "null" &&
@@ -33,7 +33,7 @@ async function createProduct(req, res, next) {
         product_photo,
         product_price
       );
-      req.addedProduct = { productId: await createdProduct() };
+      req.addedProduct = { productId: await createdProduct };
       next();
     } catch (err) {
       next(new Error(err));
@@ -90,7 +90,7 @@ async function findProductById(id) {
   const query = selectQuery("products", "*", `product_id = ${id}`);
   const [dbProduct] = await sequelize.query(query, { raw: true });
   const foundProduct = await dbProduct.find(
-    element => element.product_id === id
+    (element) => element.product_id === id
   );
   return foundProduct;
 }
@@ -169,5 +169,5 @@ module.exports = {
   getProducts,
   newProduct,
   updateProduct,
-  updateProductInDb
+  updateProductInDb,
 };

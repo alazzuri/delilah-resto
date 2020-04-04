@@ -3,7 +3,7 @@ const {
   findUserByUsername,
   getUsers,
   registerUser,
-  validateExistingUser
+  validateExistingUser,
 } = require("./users");
 
 const { validateAuth, validateCredentials } = require("./auth");
@@ -17,7 +17,7 @@ const {
   getProducts,
   newProduct,
   updateProduct,
-  updateProductInDb
+  updateProductInDb,
 } = require("./products");
 
 const {
@@ -25,7 +25,7 @@ const {
   createOrder,
   deleteOrder,
   listOrders,
-  updateOrderStatus
+  updateOrderStatus,
 } = require("./orders");
 
 module.exports = {
@@ -49,5 +49,5 @@ module.exports = {
   updateProductInDb,
   validateAuth,
   validateCredentials,
-  validateExistingUser
+  validateExistingUser,
 };

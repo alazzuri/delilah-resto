@@ -24,7 +24,7 @@ async function validateCredentials(req, res, next) {
       const { password: dbPassword, is_admin } = registeredUser;
       if (password === dbPassword) {
         const token = JWT.sign({ username, is_admin }, signature, {
-          expiresIn: "15m"
+          expiresIn: "15m",
         });
         req.jwtToken = token;
         next();

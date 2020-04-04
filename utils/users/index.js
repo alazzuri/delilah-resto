@@ -9,7 +9,8 @@ async function findUserByName(firstname, lastname) {
   );
   const [dbUser] = await sequelize.query(query, { raw: true });
   const existingUser = await dbUser.find(
-    element => element.firstname === firstname && element.lastname === lastname
+    (element) =>
+      element.firstname === firstname && element.lastname === lastname
   );
   return existingUser ? true : false;
 }
@@ -34,7 +35,7 @@ async function registerUser(req, res, next) {
     address,
     email,
     phone_number,
-    is_admin
+    is_admin,
   } = req.body;
   if (
     username &&
@@ -57,7 +58,7 @@ async function registerUser(req, res, next) {
           address,
           email,
           phone_number,
-          is_admin
+          is_admin,
         ]
       );
       [userId] = await sequelize.query(query, { raw: true });
@@ -110,5 +111,5 @@ module.exports = {
   findUserByUsername,
   getUsers,
   registerUser,
-  validateExistingUser
+  validateExistingUser,
 };

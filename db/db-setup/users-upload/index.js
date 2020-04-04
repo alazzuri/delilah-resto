@@ -29,7 +29,7 @@ const usersUpload = async () => {
         address,
         email,
         phone_number,
-        is_admin
+        is_admin,
       } = dataToUpload[i];
       const query = insertQuery(
         "users",
@@ -42,7 +42,7 @@ const usersUpload = async () => {
           address,
           email,
           phone_number,
-          is_admin
+          is_admin,
         ]
       );
       await sequelize.query(query, { raw: true });
