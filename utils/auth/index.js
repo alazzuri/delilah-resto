@@ -7,19 +7,12 @@ const { findUserByUsername } = require("../users");
 function validateAuth(req, res, next) {
   const token = req.headers.authorization;
   const validatedUser = JWT.verify(token, signature);
-  const tokenExpiration = validatedUser.exp * 1000;
-  const currentDateinSeconds = new Date().getTime();
-  const isValid = currentDateinSeconds < tokenExpiration;
-  if (isValid) {
-    const { is_admin } = validatedUser;
-    if (is_admin) {
-      req.is_admin = is_admin;
-      next();
-    } else {
-      res.status(403).json("Forbidden");
-    }
+  const { is_admin } = validatedUser;
+  if (is_admin) {
+    req.is_admin = is_admin;
+    next();
   } else {
-    res.status(401).json("Token has expired. Please login again");
+    res.status(403).json("Forbidden");
   }
 }
 

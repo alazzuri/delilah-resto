@@ -18,7 +18,7 @@ const {
   createOrder,
   listOrders,
   updateOrderStatus,
-  deleteOrder
+  deleteOrder,
 } = require("../utils");
 
 //SET UP SERVER
@@ -62,7 +62,7 @@ server.put(
   updateProduct,
   (req, res) => {
     const { updatedProduct } = req;
-    res.status(202).json(updatedProduct); //Actualizar msj en la DOC de la API. Ver todos los status code// ver si se devuelve el producto o msje de exito
+    res.status(202).json(updatedProduct);
   }
 );
 
@@ -72,7 +72,7 @@ server.delete(
   deleteProduct,
   (req, res) => {
     const { isDeleted } = req;
-    isDeleted && res.status(200).json("Deleted"); //Actualizar msj en la DOC de la API. Ver todos los status code
+    isDeleted && res.status(200).json("Deleted");
   }
 );
 
@@ -93,18 +93,25 @@ server.put(
   updateOrderStatus,
   (req, res) => {
     const { updatedOrder } = req;
-    res.status(202).json(updatedOrder); //Actualizar msj en la DOC de la API. Ver todos los status code
+    res.status(202).json(updatedOrder);
   }
 );
 
 server.delete("/v1/orders/:orderId", validateAuth, deleteOrder, (req, res) => {
   const { isDeleted } = req;
-  isDeleted && res.status(200).json("Deleted"); //Actualizar msj en la DOC de la API. Ver todos los status code
+  isDeleted && res.status(200).json("Deleted");
 });
 
 // ERROR DETECTION
 server.use((err, req, res, next) => {
-  if (!err) return next();
-  console.log("An error has occurred", err);
-  res.status(500).send("Error");
+  if (!err) {
+    return next();
+  } else if (err.name === "JsonWebTokenError") {
+    console.log(err);
+    res.status(400).json(`Error: ${err.message}`);
+  } else if (err.name === "TokenExpiredError") {
+    res.status(401).json("Token has expired. Please login again");
+  } else {
+    console.log("An error has occurred", err), res.status(500).send("Error");
+  }
 });
