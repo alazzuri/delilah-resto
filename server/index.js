@@ -18,7 +18,7 @@ const {
   createOrder,
   listOrders,
   updateOrderStatus,
-  deleteOrder
+  deleteOrder,
 } = require("../utils");
 
 //SET UP SERVER
@@ -104,7 +104,14 @@ server.delete("/v1/orders/:orderId", validateAuth, deleteOrder, (req, res) => {
 
 // ERROR DETECTION
 server.use((err, req, res, next) => {
-  if (!err) return next();
-  console.log("An error has occurred", err);
-  res.status(500).send("Error");
+  if (!err) {
+    return next();
+  } else if (err.name === "JsonWebTokenError") {
+    console.log(err);
+    res.status(400).json(`Error: ${err.message}`);
+  } else if (err.name === "TokenExpiredError") {
+    res.status(401).json("Token has expired. Please login again");
+  } else {
+    console.log("An error has occurred", err), res.status(500).send("Error");
+  }
 });
