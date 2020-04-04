@@ -5,15 +5,13 @@ const {
   joinQuery,
   selectQuery,
   sequelize,
-  updateQuery
+  updateQuery,
 } = require("../../db");
 
 // UTILS
-const {
-  findProductById,
-  findProductPrice,
-  findUserByUsername
-} = require("../../utils");
+const { findUserByUsername } = require("../users");
+
+const { findProductById, findProductPrice } = require("../products");
 
 async function addOrderInDb(req, res) {
   const { username, products, payment_method } = req.body;
@@ -49,7 +47,7 @@ async function completeDesc(orderInfo) {
     `order_id = ${order.order_id}`
   );
   const [productsInfo] = await sequelize.query(productsQuery, {
-    raw: true
+    raw: true,
   });
   order.products = await productsInfo;
   return order;
@@ -81,7 +79,7 @@ async function createOrderRegistry(
 }
 
 async function createOrderRelationship(orderId, products) {
-  products.forEach(async product => {
+  products.forEach(async (product) => {
     const { productId, quantity } = product;
     const query = insertQuery(
       "orders_products",
@@ -114,7 +112,7 @@ async function findOrderbyId(orderId) {
   const query = selectQuery("orders", "*", `order_id = ${orderId}`);
   const [dbOrder] = await sequelize.query(query, { raw: true });
   const foundOrder = await dbOrder.find(
-    element => element.order_id === orderId
+    (element) => element.order_id === orderId
   );
   return foundOrder;
 }
@@ -125,7 +123,7 @@ async function listOrders(req, res, next) {
     const [ordersIds] = await sequelize.query(ordersQuery, { raw: true });
     const detailedOrders = async () => {
       return Promise.all(
-        ordersIds.map(async order => printOrderInfo(order.order_id))
+        ordersIds.map(async (order) => printOrderInfo(order.order_id))
       );
     };
     req.ordersList = await detailedOrders();
@@ -196,9 +194,11 @@ function validateStatus(submittedStatus) {
     "confirmed",
     "preparing",
     "delivering",
-    "delivered"
+    "delivered",
   ];
-  const existingStatus = validStatus.find(status => status === submittedStatus);
+  const existingStatus = validStatus.find(
+    (status) => status === submittedStatus
+  );
   return existingStatus;
 }
 
@@ -207,5 +207,5 @@ module.exports = {
   createOrder,
   deleteOrder,
   listOrders,
-  updateOrderStatus
+  updateOrderStatus,
 };
