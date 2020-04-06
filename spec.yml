@@ -167,7 +167,12 @@ paths:
       operationId: "getOrders"
       produces:
         - "application/json"
-      parameters: []
+      parameters:
+        - in: "header"
+          name: "authorization"
+          description: "Authentication Token"
+          required: true
+          type: "string"
       responses:
         200:
           description: "successful operation"
@@ -218,15 +223,15 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - name: "orderId"
-          in: "path"
+        - in: "path"
+          name: "orderId"
           description: "Order id to update"
           required: true
           type: "integer"
           format: "int64"
-        - name: "token"
+        - in: "header"
+          name: "authorization"
           description: "Authentication Token"
-          in: "header"
           required: true
           type: "string"
         - in: "body"
@@ -294,7 +299,12 @@ paths:
       operationId: "getUsers"
       produces:
         - "application/json"
-      parameters: []
+      parameters:
+        - in: "header"
+          name: "authorization"
+          description: "Authentication Token"
+          required: true
+          type: "string"
       responses:
         200:
           description: "successful operation"
@@ -302,6 +312,9 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/user_registered"
+      security:
+        - store_auth:
+            - "write:users"
 
     post:
       tags:
@@ -371,6 +384,7 @@ securityDefinitions:
     scopes:
       write:products: "create, modify and delete products in the store"
       write:orders: "modify orders status in the store"
+      write:users: "list the registered users"
 
 definitions:
   order_sent:
