@@ -4,6 +4,7 @@ const {
   joinQuery,
   selectQuery,
   updateQuery,
+  useQuery,
 } = require("./queries");
 
 const { sequelize } = require("./sequelize");
@@ -14,5 +15,6 @@ module.exports = {
   joinQuery,
   selectQuery,
   updateQuery,
+  useQuery,
   sequelize,
 };

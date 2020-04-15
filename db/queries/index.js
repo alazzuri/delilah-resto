@@ -64,6 +64,11 @@ function ordersRelationshipTableQuery() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci`;
 }
 
+function useQuery() {
+  const query = "USE " + dbName;
+  return query;
+}
+
 //INSERT QUERY
 function insertQuery(table, properties, values) {
   const dataToInsert = values.map((value) => `'${value}'`).join(",");
@@ -116,5 +121,6 @@ module.exports = {
   productsTableQuery,
   selectQuery,
   updateQuery,
+  useQuery,
   usersTableQuery,
 };

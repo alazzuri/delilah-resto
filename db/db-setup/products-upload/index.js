@@ -4,7 +4,7 @@ const fs = require("fs");
 const getStream = require("get-stream");
 
 //DATABASE
-const { insertQuery, sequelize } = require("../../../db");
+const { insertQuery, sequelize, useQuery } = require("../../../db");
 
 //DATASETS
 const productsDs = "../datasets/products/products.csv";
@@ -19,6 +19,7 @@ const productsData = async () => {
 
 const productsUpload = async () => {
   const dataToUpload = await productsData();
+  await sequelize.query(useQuery(), { raw: true });
   for (let i = 0; i < dataToUpload.length; i++) {
     try {
       const { product_name, product_price, product_photo } = dataToUpload[i];
