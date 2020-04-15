@@ -1,4 +1,4 @@
---  Create Schema
+--  Create database
 CREATE DATABASE  IF NOT EXISTS `delilah_resto`;
 USE `delilah_resto`;
 

@@ -40,15 +40,17 @@ $ yarn install
 
 ### Database Set up:
 
-- Run a MySQL server
+#### Auto set up:
+
+- Run a MySQL server.
+
+- Create the database from MySQL by using the command line or the destktop utility.
 
 - Open `config.js` file (`db/sequelize/config.js`) where you can edit:
 
   1. Database's host and port to which the API should connect
   2. Database's name.
   3. Database's user and password to connect.
-
-- Auto set up:
 
 ```
 $ cd db/db-setup
@@ -57,7 +59,19 @@ $ node index.js
 
 This will create the DB's schema, tables and will import example data of users and products. You can **edit** example information by replacing `products.csv` and/or `users.csv` files in `db/datasets`
 
-You can also create the schemas and the tables mannualy, by using the _queries_ existing in `dbCreators.sql`.
+#### Manual Setup:
+
+If the Auto set up fails, you can do the following:
+
+1. Initialize the MySQL server.
+2. Create the database called **delilah_resto** from the command line or the desktop utility.
+3. Create the schema and the tables, and insert the data mannually, by using the _queries_ existing in `dbCreators.sql`.
+
+Before start using the server, don't forget to edit `config.js` file (`db/sequelize/config.js`) with:
+
+1. Database's host and port to which the API should connect
+2. Database's name.
+3. Database's user and password to connect.
 
 ## Run the API
 
